@@ -1,0 +1,38 @@
+[
+  {
+    "name": "dara",
+    "date": "2023-05-01",
+    "time": "morning",
+    "work_time": "7:00 AM - 12:00 PM"
+  },
+  {
+    "name": "chantha",
+    "date": "2023-05-01",
+    "time": "afternoon",
+    "work_time": "12:00 PM - 7:00 PM"
+  },
+  {
+    "name": "pitou",
+    "date": "2023-05-01",
+    "time": "night",
+    "work_time": "7:00 PM - 7:00 AM"
+  },
+  {
+    "name": "dara",
+    "date": "2023-05-02",
+    "time": "morning",
+    "work_time": "7:00 AM - 12:00 PM"
+  },
+  {
+    "name": "theary",
+    "date": "2023-05-02",
+    "time": "afternoon",
+    "work_time": "12:00 PM - 7:00 PM"
+  },
+  {
+    "name": "rotha",
+    "date": "2023-05-02",
+    "time": "night",
+    "work_time": "7:00 PM - 7:00 AM"
+  }
+]
