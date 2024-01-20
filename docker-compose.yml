@@ -1,0 +1,8 @@
+version: '3'
+
+services:
+  your_bot:
+    build:
+      context: .
+    env_file:
+      - .env
