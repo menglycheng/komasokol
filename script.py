@@ -38,6 +38,9 @@ def create_back_keyboard():
 @bot.message_handler(commands=['start'])
 def welcome_msg(message):
     bot.send_message(message.chat.id, "🌟 សូមស្វាគមន៍មកកាន់ មន្ទីរពេទ្យកុមារសកល សារស្វ័យប្រវត្តិ របស់យើងនៅលើ Telegram! 🤖", reply_markup=create_main_keyboard(message.chat.id))
+@bot.message_handler(commands=['group'])
+def get_id(message):
+    bot.send_message(message.chat.id, message.chat.id)
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_query(call):
