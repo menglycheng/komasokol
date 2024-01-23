@@ -1,6 +1,6 @@
 import os
 import telebot
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
 from dotenv import load_dotenv
 import requests
 
@@ -11,6 +11,7 @@ URL = os.getenv('URL')
 
 bot = telebot.TeleBot(API)
 
+
 def create_main_keyboard(chat_id):
     keyboard = InlineKeyboardMarkup()
 
@@ -18,11 +19,12 @@ def create_main_keyboard(chat_id):
     contact_button = InlineKeyboardButton('លេខទំនាក់ទំនង', callback_data='contact')
     about_button = InlineKeyboardButton('អំពីយើង', callback_data='about')
     location_button = InlineKeyboardButton('ទីតាំងរបស់ពួកយើង', callback_data='location')
+    live_chat_button = InlineKeyboardButton('Live Chat',url='https://t.me/komasakol')
     connect_button = InlineKeyboardButton('ភ្ចាប់ជាមួយសារស្វ័យប្រវត្តិ', callback_data='connect')
     disconnect_button = InlineKeyboardButton('ផ្តាច់ចេញពីសារស្វ័យប្រវត្តិ', callback_data='disconnect')
 
-    keyboard.row(service_button, contact_button)
-    keyboard.row(about_button, location_button)
+    keyboard.row(service_button,about_button, location_button)
+    keyboard.row(contact_button,live_chat_button)
     if check_user_connect(chat_id) == 'false':
         keyboard.row(connect_button)
     else:
@@ -32,12 +34,17 @@ def create_main_keyboard(chat_id):
 
 def create_back_keyboard():
     back_button = InlineKeyboardMarkup()
-    back_button.add(InlineKeyboardButton('ត្រលប់ក្រោយ', callback_data='back'))
+    back_button.add(InlineKeyboardButton('⬅️ ត្រលប់ក្រោយ', callback_data='back'))
     return back_button
 
 @bot.message_handler(commands=['start'])
 def welcome_msg(message):
     bot.send_message(message.chat.id, "🌟 សូមស្វាគមន៍មកកាន់ មន្ទីរពេទ្យកុមារសកល សារស្វ័យប្រវត្តិ របស់យើងនៅលើ Telegram! 🤖", reply_markup=create_main_keyboard(message.chat.id))
+
+# warning user if they send message to bot
+@bot.message_handler(func=lambda message: True)
+def warning_msg(message):
+    bot.send_message(message.chat.id, "សូមអភ័យទោស! យើងមិនអាចទទួលបានសារពីអ្នកទេ។ សូមចុចលើប៊ូតុងខាងក្រោមដើម្បីទទួលបានសារពីយើង។", reply_markup=create_main_keyboard(message.chat.id))
 @bot.message_handler(commands=['group'])
 def get_id(message):
     bot.send_message(message.chat.id, message.chat.id)
@@ -180,5 +187,7 @@ def get_data_from_api(chat_id,msg_id,model):
             return f"Failed to get data from Odoo. Status code: {response.status_code}"
     except requests.RequestException as e:
         return f"Request failed: {e}"
+
+
 
 bot.polling()
