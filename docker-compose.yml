@@ -6,3 +6,7 @@ services:
       context: .
     env_file:
       - .env
+    volumes:
+      - ./script.py:/app/script.py  # Mount your script as a volume
+      - /app/__pycache__            # Exclude __pycache__ to prevent caching issues
+    command: ["python", "script.py"]

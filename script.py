@@ -109,12 +109,15 @@ def disconnect_user(chat_id):
 def send_data_to_api(message):
     secret_code = message.text
     chat_id = message.chat.id
+    # get username
+    username = message.from_user.username
     url = f'{URL}/api/getChatID'
     data = {
         "jsonrpc": "2.0",
         "params": {
             "secret_code": secret_code,
-            'chat_id': chat_id
+            'chat_id': chat_id,
+            'username': username
         }
     }
     headers = {
