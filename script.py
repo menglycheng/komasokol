@@ -3,13 +3,20 @@ import telebot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
 from dotenv import load_dotenv
 import requests
+import logging
+import time
 
 load_dotenv()
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 
 API = os.getenv('BOT_TOKEN')
 URL = os.getenv('URL')
 
 bot = telebot.TeleBot(API)
+
 
 
 def create_main_keyboard(chat_id):
@@ -21,6 +28,8 @@ def create_main_keyboard(chat_id):
     location_button = InlineKeyboardButton('ទីតាំងរបស់ពួកយើង', callback_data='location')
     live_chat_button = InlineKeyboardButton('Live Chat',url='https://t.me/komasakol')
     connect_button = InlineKeyboardButton('ភ្ចាប់ជាមួយសារស្វ័យប្រវត្តិ', callback_data='connect')
+    other_connect_button = InlineKeyboardButton('ភ្ចាប់ថ្មី', callback_data='connect')
+
     disconnect_button = InlineKeyboardButton('ផ្តាច់ចេញពីសារស្វ័យប្រវត្តិ', callback_data='disconnect')
 
     keyboard.row(service_button,about_button, location_button)
@@ -28,7 +37,7 @@ def create_main_keyboard(chat_id):
     if check_user_connect(chat_id) == 'false':
         keyboard.row(connect_button)
     else:
-        keyboard.row(disconnect_button)
+        keyboard.row(disconnect_button,other_connect_button)
 
     return keyboard
 
@@ -39,11 +48,15 @@ def create_back_keyboard():
 
 @bot.message_handler(commands=['start'])
 def welcome_msg(message):
-    bot.send_message(message.chat.id, "🌟 សូមស្វាគមន៍មកកាន់ មន្ទីរពេទ្យកុមារសកល សារស្វ័យប្រវត្តិ របស់យើងនៅលើ Telegram! 🤖", reply_markup=create_main_keyboard(message.chat.id))
-
+    try:
+        bot.send_message(message.chat.id, "🌟 សូមស្វាគមន៍មកកាន់ មន្ទីរពេទ្យកុមារសកល សារស្វ័យប្រវត្តិ របស់យើងនៅលើ Telegram! 🤖", reply_markup=create_main_keyboard(message.chat.id))
+    except Exception as e:
+        print(repr(e))
+        bot.send_message(message.chat.id, "សូមស្វាគមន៍មកកាន់ មន្ទីរពេទ្យកុមារសកល សារស្វ័យប្រវត្តិ របស់យើងនៅលើ Telegram!", reply_markup=create_main_keyboard(message.chat.id))
 # warning user if they send message to bot
 @bot.message_handler(func=lambda message: True)
 def warning_msg(message):
+
     bot.send_message(message.chat.id, "សូមអភ័យទោស! យើងមិនអាចទទួលបានសារពីអ្នកទេ។ សូមចុចលើប៊ូតុងខាងក្រោមដើម្បីទទួលបានសារពីយើង។", reply_markup=create_main_keyboard(message.chat.id))
 @bot.message_handler(commands=['group'])
 def get_id(message):
@@ -55,10 +68,10 @@ def callback_query(call):
         chat_id = call.message.chat.id
         msg_id = call.message.message_id
         if call.data == 'connect':
-            bot.send_message(call.message.chat.id, "ភ្ចាប់ជាមួយសារស្វ័យប្រវត្តិលោកអ្នកនឹងទទួលបានការជូនដំណឹងពីពួកយើងដូចខាងក្រោម៖ \n 1. ទទួលបានសាររាល់ការណាត់ \n2. អ្នកនឹងទទួលបានដំណឹងផ្សេងៗទៀត")
-            bot.send_message(call.message.chat.id, "ដើម្បីទទួលបានលេខសម្ងាត់សូមទៅកាន់កន្លែងទទួលភ្ញៀវ")
+            bot.send_message(call.message.chat.id, "ភ្ចាប់ជាមួយសារស្វ័យប្រវត្តិលោកអ្នកនឹងទទួលបានការជូនដំណឹងពីពួកយើងដូចខាងក្រោម៖ \n 1. ទទួលបានសាររាល់ការណាត់ \n2. អ្នកនឹងទទួលបានដំណឹងផ្សេងៗទៀត \nដើម្បីទទួលបានលេខសម្ងាត់សូមទៅកាន់កន្លែងទទួលភ្ញៀវ")
             bot.send_message(call.message.chat.id, "សូមបញ្ជូនលេខសម្ងាត់:", reply_markup=create_back_keyboard())
             bot.register_next_step_handler(call.message, send_data_to_api)
+            print(call.message)
         elif call.data == 'disconnect':
             disconnect_user(chat_id)
         elif call.data == 'service':
@@ -72,7 +85,7 @@ def callback_query(call):
         elif call.data == 'back':
             bot.edit_message_text(chat_id=chat_id, message_id=msg_id, text="🌟 សូមស្វាគមន៍មកកាន់ មន្ទីរពេទ្យកុមារសកល សារស្វ័យប្រវត្តិ របស់យើងនៅលើ Telegram! 🤖", reply_markup=create_main_keyboard(chat_id))
     except Exception as e:
-        print(repr(e))
+        logger.error(f"Error in callback_query: {e}")
         bot.send_message(call.message.chat.id, "សូមស្វាគមន៍មកកាន់ មន្ទីរពេទ្យកុមារសកល សារស្វ័យប្រវត្តិ របស់យើងនៅលើ Telegram!", reply_markup=create_main_keyboard(chat_id))
 
 # function to disconnect user
@@ -112,12 +125,14 @@ def send_data_to_api(message):
     # get username
     username = message.from_user.username
     url = f'{URL}/api/getChatID'
+    if username == None:
+        username = message.from_user.first_name + ' ' + message.from_user.last_name
     data = {
         "jsonrpc": "2.0",
         "params": {
             "secret_code": secret_code,
             'chat_id': chat_id,
-            'username': username
+            'username': username 
         }
     }
     headers = {
@@ -190,7 +205,11 @@ def get_data_from_api(chat_id,msg_id,model):
             return f"Failed to get data from Odoo. Status code: {response.status_code}"
     except requests.RequestException as e:
         return f"Request failed: {e}"
+if __name__ == "__main__":
+    while True:
+        try:
+            bot.polling(none_stop=True, interval=0, timeout=20)
+        except Exception as ex:
+            logger.error(f"Bot polling failed: {ex}")
+            time.sleep(15)
 
-
-
-bot.polling()
