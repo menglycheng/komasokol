@@ -26,7 +26,7 @@ def create_main_keyboard(chat_id):
     contact_button = InlineKeyboardButton('លេខទំនាក់ទំនង', callback_data='contact')
     about_button = InlineKeyboardButton('អំពីយើង', callback_data='about')
     location_button = InlineKeyboardButton('ទីតាំងរបស់ពួកយើង', callback_data='location')
-    live_chat_button = InlineKeyboardButton('Live Chat',url='https://t.me/komasakol')
+    live_chat_button = InlineKeyboardButton('Live Chat',url='https://t.me/komasakol_livechat')
     connect_button = InlineKeyboardButton('ភ្ចាប់ជាមួយសារស្វ័យប្រវត្តិ', callback_data='connect')
     other_connect_button = InlineKeyboardButton('ភ្ចាប់ថ្មី', callback_data='connect')
 
