@@ -85,6 +85,7 @@ def callback_query(call):
         elif call.data == 'location':
             get_data_from_api(chat_id,msg_id,'location')
         elif call.data == 'duty_staff':
+            current_date = datetime.datetime.now().strftime("%d/%m/%Y")
             morning_timetable = "\nវេនពេលព្រឹក៖ \n"
             afternoon_timetable = "\nវេនពេលរសៀល៖ \n"
             night_timetable = "\nវេនពេលយប់៖ \n"
@@ -96,7 +97,7 @@ def callback_query(call):
             for doctor in doctor_timetable['night_shift']:
                 night_timetable += f"🧑🏻‍⚕️ Dr. {doctor} \n"
 
-            msg = f'🧑🏻‍⚕️គ្រូពេទ្យប្រចាំការថ្ងៃនេះ : \n🗓️ 12-01-2024 \n --------------------\n{morning_timetable} {afternoon_timetable} {night_timetable} \n'
+            msg = f'🧑🏻‍⚕️គ្រូពេទ្យប្រចាំការថ្ងៃនេះ : \n🗓️ {current_date} \n --------------------\n{morning_timetable} {afternoon_timetable} {night_timetable} \n⚠️៖​ មន្ទីរពេទ្យយើងរក្សាសិទ្ធិក្នុងការផ្លាស់ប្តូរដោយពុំបាច់ជូនដំណឹងជាមុន '
             bot.edit_message_text(chat_id=chat_id, message_id=msg_id, text=msg, reply_markup=create_back_keyboard())
         elif call.data == 'back':
             bot.edit_message_text(chat_id=chat_id, message_id=msg_id, text="🌟 សូមស្វាគមន៍មកកាន់ មន្ទីរពេទ្យកុមារសកល សារស្វ័យប្រវត្តិ របស់យើងនៅលើ Telegram! 🤖", reply_markup=create_main_keyboard(chat_id))
