@@ -5,7 +5,8 @@ from dotenv import load_dotenv
 import requests
 import logging
 import time
-
+import datetime
+import json 
 load_dotenv()
 
 logging.basicConfig(level=logging.INFO)
@@ -21,17 +22,18 @@ bot = telebot.TeleBot(API)
 
 def create_main_keyboard(chat_id):
     keyboard = InlineKeyboardMarkup()
+    duty_staff_button = InlineKeyboardButton('🧑🏻‍⚕️ មើលបុគ្គលិកប្រចាំការនៅថ្ងៃនេះ', callback_data='duty_staff')
+    service_button = InlineKeyboardButton('🛎️ សេវាកម្ម', callback_data='service')
+    contact_button = InlineKeyboardButton('☎️ លេខទំនាក់ទំនង', callback_data='contact')
+    about_button = InlineKeyboardButton('ℹ️ អំពីយើង', callback_data='about')
+    location_button = InlineKeyboardButton('🏥 ទីតាំង', callback_data='location')
+    live_chat_button = InlineKeyboardButton('💬 Live Chat',url='https://t.me/komasakol_livechat')
+    connect_button = InlineKeyboardButton('🤖 ភ្ចាប់ជាមួយសារស្វ័យប្រវត្តិ', callback_data='connect')
+    other_connect_button = InlineKeyboardButton('🤖 ភ្ចាប់ថ្មី', callback_data='connect')
+    
 
-    service_button = InlineKeyboardButton('សេវាកម្ម', callback_data='service')
-    contact_button = InlineKeyboardButton('លេខទំនាក់ទំនង', callback_data='contact')
-    about_button = InlineKeyboardButton('អំពីយើង', callback_data='about')
-    location_button = InlineKeyboardButton('ទីតាំងរបស់ពួកយើង', callback_data='location')
-    live_chat_button = InlineKeyboardButton('Live Chat',url='https://t.me/komasakol_livechat')
-    connect_button = InlineKeyboardButton('ភ្ចាប់ជាមួយសារស្វ័យប្រវត្តិ', callback_data='connect')
-    other_connect_button = InlineKeyboardButton('ភ្ចាប់ថ្មី', callback_data='connect')
-
-    disconnect_button = InlineKeyboardButton('ផ្តាច់ចេញពីសារស្វ័យប្រវត្តិ', callback_data='disconnect')
-
+    disconnect_button = InlineKeyboardButton('❌ ផ្តាច់សារស្វ័យប្រវត្តិ', callback_data='disconnect')
+    keyboard.row(duty_staff_button)
     keyboard.row(service_button,about_button, location_button)
     keyboard.row(contact_button,live_chat_button)
     if check_user_connect(chat_id) == 'false':
@@ -82,11 +84,52 @@ def callback_query(call):
             get_data_from_api(chat_id,msg_id,'about')
         elif call.data == 'location':
             get_data_from_api(chat_id,msg_id,'location')
+        elif call.data == 'duty_staff':
+            morning_timetable = "\nវេនពេលព្រឹក៖ \n"
+            afternoon_timetable = "\nវេនពេលរសៀល៖ \n"
+            night_timetable = "\nវេនពេលយប់៖ \n"
+            doctor_timetable = json.loads(get_doctor_timetable())
+            for doctor in doctor_timetable['morning_shift']:
+                morning_timetable += f"🧑🏻‍⚕️ Dr. {doctor} \n"
+            for doctor in doctor_timetable['afternoon_shift']:
+                afternoon_timetable += f"🧑🏻‍⚕️ Dr. {doctor} \n"
+            for doctor in doctor_timetable['night_shift']:
+                night_timetable += f"🧑🏻‍⚕️ Dr. {doctor} \n"
+
+            msg = f'🧑🏻‍⚕️គ្រូពេទ្យប្រចាំការថ្ងៃនេះ : \n🗓️ 12-01-2024 \n --------------------\n{morning_timetable} {afternoon_timetable} {night_timetable} \n'
+            bot.edit_message_text(chat_id=chat_id, message_id=msg_id, text=msg, reply_markup=create_back_keyboard())
         elif call.data == 'back':
             bot.edit_message_text(chat_id=chat_id, message_id=msg_id, text="🌟 សូមស្វាគមន៍មកកាន់ មន្ទីរពេទ្យកុមារសកល សារស្វ័យប្រវត្តិ របស់យើងនៅលើ Telegram! 🤖", reply_markup=create_main_keyboard(chat_id))
     except Exception as e:
         logger.error(f"Error in callback_query: {e}")
         bot.send_message(call.message.chat.id, "សូមស្វាគមន៍មកកាន់ មន្ទីរពេទ្យកុមារសកល សារស្វ័យប្រវត្តិ របស់យើងនៅលើ Telegram!", reply_markup=create_main_keyboard(chat_id))
+
+# function to get doctor timetable
+def get_doctor_timetable():
+    url = f'{URL}/api/doctor_timetable'
+    # get current month 
+    now = datetime.datetime.now()
+    current_month = now.strftime("%B")
+    print(current_month)
+    data = {
+        "jsonrpc": "2.0",
+        "params": {
+            'month': current_month
+        }
+    }
+    headers = {
+        'Content-Type': 'application/json'
+    }
+
+    try:
+        response = requests.post(url, headers=headers, json=data)
+        if response.status_code == 200:
+            result = response.json().get('result')
+            return result
+        else:
+            return f"Failed to get data from Odoo. Status code: {response.status_code}"
+    except requests.RequestException as e:
+        return f"Request failed: {e}"
 
 # function to disconnect user
 def disconnect_user(chat_id):
