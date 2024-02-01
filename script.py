@@ -44,7 +44,7 @@ def create_main_keyboard(chat_id):
         keyboard.row(disconnect_button,other_connect_button)
     
     markup = types.ReplyKeyboardMarkup(row_width=1, one_time_keyboard=True)
-    button_geo = types.KeyboardButton(text="Check IN/OUT", request_location=True)
+    button_geo = types.KeyboardButton(text="✅ Check IN/OUT", request_location=True)
     markup.add(button_geo)
     if isStaff(chat_id) == "true":
         # add ReplyKeyboardMarkup and 
@@ -64,13 +64,13 @@ def handle_location(message):
     longitude = message.location.longitude
     addrees = getAddress()
     
-    distance = haversine(float(addrees['longitude']),float(addrees['latitude']), latitude, longitude)
-    if distance <= 1:
+    distance = haversine(latitude, longitude,float(addrees['longitude']),float(addrees['latitude']),200)
+    if distance:
         msg = postAttendance(message.chat.id)
-        bot.reply_to(message, f"វត្តមានរបស់អ្នកបានកត់ទុក។ \n កាលបរិច្ឆេទ៖ {msg['datetime']} សូមអរគុណ")
+        bot.reply_to(message, f" ✅ វត្តមានរបស់អ្នកបានកត់ទុក។ \n🗓️ កាលបរិច្ឆេទ៖ {msg['datetime']} \n🙏សូមអរគុណ🙏")
         
     else:
-        bot.reply_to(message, f"ទីតាំងរបស់អ្នកនៅឆ្ងាយពីមន្ទីរពេទ្យមិនអាចកត់ទុកវត្តមានបានទេ \nសូមមេត្តាព្យាយាមម្តងទៀត។")
+        bot.reply_to(message, f"❎ ទីតាំងរបស់អ្នកនៅឆ្ងាយពីមន្ទីរពេទ្យមិនអាចកត់ទុកវត្តមានបានទេ \n🙏សូមមេត្តាព្យាយាមម្តងទៀត។🙏")
 
 @bot.message_handler(commands=['start'])
 def welcome_msg(message):

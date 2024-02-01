@@ -1,4 +1,4 @@
-from math import radians, cos, sin, asin, sqrt
+from math import radians, sin, cos, sqrt, asin
 from dotenv import load_dotenv
 import os
 import requests
@@ -7,18 +7,19 @@ URL = os.getenv('URL')
 
 
 
-def haversine(lon1, lat1, lon2, lat2):
+def haversine(user_lat, user_long, center_lat, center_long, radius):
     # Convert latitude and longitude from degrees to radians
-    lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
-
-    # Haversine formula
-    dlon = lon2 - lon1
-    dlat = lat2 - lat1
-    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+    user_lat, user_long, center_lat, center_long = map(radians, [user_lat, user_long, center_lat, center_long])
+    dlon = center_long - user_long
+    dlat = center_lat - user_lat
+    a = sin(dlat/2)**2 + cos(user_lat) * cos(center_lat) * sin(dlon/2)**2
     c = 2 * asin(sqrt(a))
-    r = 6371  # Radius of Earth in kilometers
-    return c * r
-# Post attendance to Odoo from post request method
+    r_earth = 6371000  # Earth's radius in meters
+
+    # Check if distance is within radius
+    distance = c * r_earth
+    return distance <= radius
+
 def postAttendance(chat_id):
     url = f'{URL}/api/checkIn'
     data = {
