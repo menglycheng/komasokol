@@ -1,5 +1,6 @@
 import os
 import telebot
+from telebot import types
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
 from dotenv import load_dotenv
 import requests
@@ -7,7 +8,9 @@ import logging
 import time
 import datetime
 import json 
+from attendance import postAttendance, getAddress, haversine, isStaff
 load_dotenv()
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -17,7 +20,6 @@ API = os.getenv('BOT_TOKEN')
 URL = os.getenv('URL')
 
 bot = telebot.TeleBot(API)
-
 
 
 def create_main_keyboard(chat_id):
@@ -40,13 +42,35 @@ def create_main_keyboard(chat_id):
         keyboard.row(connect_button)
     else:
         keyboard.row(disconnect_button,other_connect_button)
-
-    return keyboard
+    
+    markup = types.ReplyKeyboardMarkup(row_width=1, one_time_keyboard=True)
+    button_geo = types.KeyboardButton(text="Check IN/OUT", request_location=True)
+    markup.add(button_geo)
+    if isStaff(chat_id) == "true":
+        # add ReplyKeyboardMarkup and 
+        return markup
+    else:
+        return keyboard
 
 def create_back_keyboard():
     back_button = InlineKeyboardMarkup()
     back_button.add(InlineKeyboardButton('⬅️ ត្រលប់ក្រោយ', callback_data='back'))
     return back_button
+
+
+@bot.message_handler(content_types=['location'])
+def handle_location(message):
+    latitude = message.location.latitude
+    longitude = message.location.longitude
+    addrees = getAddress()
+    
+    distance = haversine(float(addrees['longitude']),float(addrees['latitude']), latitude, longitude)
+    if distance <= 1:
+        msg = postAttendance(message.chat.id)
+        bot.reply_to(message, f"វត្តមានរបស់អ្នកបានកត់ទុក។ សូមអរគុណ {msg['datetime']}")
+        
+    else:
+        bot.reply_to(message, f"User is farther than 1 km.: {float(addrees['latitude'])} , {latitude}, {longitude}")
 
 @bot.message_handler(commands=['start'])
 def welcome_msg(message):
@@ -58,8 +82,9 @@ def welcome_msg(message):
 # warning user if they send message to bot
 @bot.message_handler(func=lambda message: True)
 def warning_msg(message):
-
-    bot.send_message(message.chat.id, "សូមអភ័យទោស! យើងមិនអាចទទួលបានសារពីអ្នកទេ។ សូមចុចលើប៊ូតុងខាងក្រោមដើម្បីទទួលបានសារពីយើង។", reply_markup=create_main_keyboard(message.chat.id))
+    # skip if user send location or command
+    if message.content_type != 'location' or message.content_type != 'command':
+        bot.send_message(message.chat.id, "សូមអភ័យទោស! យើងមិនអាចទទួលបានសារពីអ្នកទេ។ សូមចុចលើប៊ូតុងខាងក្រោមដើម្បីទទួលបានសារពីយើង។", reply_markup=create_main_keyboard(message.chat.id))
 @bot.message_handler(commands=['group'])
 def get_id(message):
     bot.send_message(message.chat.id, message.chat.id)
@@ -73,11 +98,12 @@ def callback_query(call):
             bot.send_message(call.message.chat.id, "ភ្ចាប់ជាមួយសារស្វ័យប្រវត្តិលោកអ្នកនឹងទទួលបានការជូនដំណឹងពីពួកយើងដូចខាងក្រោម៖ \n 1. ទទួលបានសាររាល់ការណាត់ \n2. អ្នកនឹងទទួលបានដំណឹងផ្សេងៗទៀត \nដើម្បីទទួលបានលេខសម្ងាត់សូមទៅកាន់កន្លែងទទួលភ្ញៀវ")
             bot.send_message(call.message.chat.id, "សូមបញ្ជូនលេខសម្ងាត់:", reply_markup=create_back_keyboard())
             bot.register_next_step_handler(call.message, send_data_to_api)
-            print(call.message)
+            
         elif call.data == 'disconnect':
             disconnect_user(chat_id)
         elif call.data == 'service':
             get_data_from_api(chat_id,msg_id,'service')
+            # getUpdates
         elif call.data == 'contact':
             get_data_from_api(chat_id,msg_id,'contact')
         elif call.data == 'about':
