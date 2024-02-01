@@ -67,10 +67,10 @@ def handle_location(message):
     distance = haversine(float(addrees['longitude']),float(addrees['latitude']), latitude, longitude)
     if distance <= 1:
         msg = postAttendance(message.chat.id)
-        bot.reply_to(message, f"វត្តមានរបស់អ្នកបានកត់ទុក។ សូមអរគុណ {msg['datetime']}")
+        bot.reply_to(message, f"វត្តមានរបស់អ្នកបានកត់ទុក។ \n កាលបរិច្ឆេទ៖ {msg['datetime']} សូមអរគុណ")
         
     else:
-        bot.reply_to(message, f"User is farther than 1 km.: {float(addrees['latitude'])} , {latitude}, {longitude}")
+        bot.reply_to(message, f"ទីតាំងរបស់អ្នកនៅឆ្ងាយពីមន្ទីរពេទ្យមិនអាចកត់ទុកវត្តមានបានទេ \nសូមមេត្តាព្យាយាមម្តងទៀត។")
 
 @bot.message_handler(commands=['start'])
 def welcome_msg(message):
