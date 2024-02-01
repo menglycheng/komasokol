@@ -83,8 +83,7 @@ def welcome_msg(message):
 @bot.message_handler(func=lambda message: True)
 def warning_msg(message):
     # skip if user send location or command
-    if message.content_type != 'location' or message.content_type != 'command':
-        bot.send_message(message.chat.id, "សូមអភ័យទោស! យើងមិនអាចទទួលបានសារពីអ្នកទេ។ សូមចុចលើប៊ូតុងខាងក្រោមដើម្បីទទួលបានសារពីយើង។", reply_markup=create_main_keyboard(message.chat.id))
+    bot.send_message(message.chat.id, "សូមអភ័យទោស! យើងមិនអាចទទួលបានសារពីអ្នកទេ។ សូមចុចលើប៊ូតុងខាងក្រោមដើម្បីទទួលបានសារពីយើង។", reply_markup=create_main_keyboard(message.chat.id))
 @bot.message_handler(commands=['group'])
 def get_id(message):
     bot.send_message(message.chat.id, message.chat.id)
