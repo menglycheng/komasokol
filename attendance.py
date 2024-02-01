@@ -10,13 +10,14 @@ URL = os.getenv('URL')
 def haversine(user_lat, user_long, center_lat, center_long, radius):
     # Convert latitude and longitude from degrees to radians
     user_lat, user_long, center_lat, center_long = map(radians, [user_lat, user_long, center_lat, center_long])
+    # Haversine formula
     dlon = center_long - user_long
     dlat = center_lat - user_lat
-    a = sin(dlat/2)**2 + cos(user_lat) * cos(center_lat) * sin(dlon/2)**2
+    a = sin(dlat / 2) ** 2 + cos(user_lat) * cos(center_lat) * sin(dlon / 2) ** 2
     c = 2 * asin(sqrt(a))
     r_earth = 6371000  # Earth's radius in meters
 
-    # Check if distance is within radius
+    # Calculate distance and check if it's within the specified radius
     distance = c * r_earth
     return distance <= radius
 
