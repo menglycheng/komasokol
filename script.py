@@ -103,13 +103,6 @@ def callback_query(call):
         logger.error(f"Error in callback_query: {e}")
         bot.send_message(call.message.chat.id, "សូមស្វាគមន៍មកកាន់ មន្ទីរពេទ្យកុមារសកល សារស្វ័យប្រវត្តិ របស់យើងនៅលើ Telegram!", reply_markup=create_main_keyboard(chat_id))
 
-@bot.callback_query_handler(func=lambda call: True)
-def handle_patient_qr(call):
-    
-    if call.data:
-        bot.send_message(call.message.chat.id, f"Hello {call.data}!")
-
-
 # function to get doctor timetable
 def get_doctor_timetable():
     url = f'{URL}/api/doctor_timetable'
