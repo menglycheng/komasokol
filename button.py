@@ -16,7 +16,7 @@ def create_main_keyboard(chat_id):
     live_chat_button = InlineKeyboardButton('💬 Live Chat',url='https://t.me/komasakol_livechat')
     connect_button = InlineKeyboardButton('🤖 ភ្ចាប់ជាមួយសារស្វ័យប្រវត្តិ', callback_data='connect')
     other_connect_button = InlineKeyboardButton('🤖 ភ្ចាប់ថ្មី', callback_data='connect')
-    qrcode = InlineKeyboardButton('🔗 កូដ QR', callback_data='qrcode')
+    qrcode = InlineKeyboardButton('🔗 ចុះឈ្មោះតាមកូដ QR', callback_data='qrcode')
     
 
     disconnect_button = InlineKeyboardButton('❌ ផ្តាច់សារស្វ័យប្រវត្តិ', callback_data='disconnect')
