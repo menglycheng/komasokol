@@ -51,7 +51,9 @@ def callback_query(call):
         usernames = get_patient_username(call.message.chat.id)
         usernames_list = json.loads(usernames)
         if call.data == 'connect':
-            username = call.message.chat.username
+            username = call.message.from_user.username
+            if username == None:
+                username = call.message.from_user.first_name + ' ' + call.message.from_user.last_name
             generate_qrcode(str(chat_id),username)
             # send photo with text 
             connect_telegram = bot.send_photo(chat_id, photo=open(f'{chat_id}.png', 'rb'), caption="សុំបង្ហាញ Qr-Code នេះទៅបុគ្គលិក។")
