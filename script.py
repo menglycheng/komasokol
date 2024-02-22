@@ -54,12 +54,12 @@ def callback_query(call):
             username = call.message.chat.username | call.message.chat.first_name + call.message.chat.last_name
             generate_qrcode(str(chat_id),username)
             # send photo with text 
-
-            photo_message = bot.send_photo(chat_id, photo=open(f'{chat_id}.png', 'rb'), caption="សុំបង្ហាញ Qr-Code នេះទៅបុគ្គលិក។")
-            msg_id = photo_message.message_id
+            connect_telegram = bot.send_photo(chat_id, photo=open(f'{chat_id}.png', 'rb'), caption="សុំបង្ហាញ Qr-Code នេះទៅបុគ្គលិក។")
+            connect_telegram_id = connect_telegram.message_id
             time.sleep(15)
-            bot.delete_message(chat_id=chat_id, message_id=msg_id)
+            bot.delete_message(chat_id=chat_id, message_id=connect_telegram_id)
             delete_qrcode(chat_id)
+
         elif call.data == 'qrcode':
             bot.edit_message_text(chat_id=chat_id, message_id=msg_id, text="📋ជ្រើសរើសឈ្មោះដែលអ្នកចង់ចុះឈ្មោះ", reply_markup=create_patient_qrcode(chat_id))
         elif call.data in usernames_list:
