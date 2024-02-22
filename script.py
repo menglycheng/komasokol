@@ -8,8 +8,9 @@ import logging
 import time
 import datetime
 import json 
-from attendance import postAttendance, getAddress, haversine, isStaff
+from generate_qrcode import generate_qrcode,delete_qrcode
 load_dotenv()
+
 
 
 logging.basicConfig(level=logging.INFO)
@@ -32,12 +33,13 @@ def create_main_keyboard(chat_id):
     live_chat_button = InlineKeyboardButton('💬 Live Chat',url='https://t.me/komasakol_livechat')
     connect_button = InlineKeyboardButton('🤖 ភ្ចាប់ជាមួយសារស្វ័យប្រវត្តិ', callback_data='connect')
     other_connect_button = InlineKeyboardButton('🤖 ភ្ចាប់ថ្មី', callback_data='connect')
+    qrcode = InlineKeyboardButton('🔗 កូដ QR', callback_data='qrcode')
     
 
     disconnect_button = InlineKeyboardButton('❌ ផ្តាច់សារស្វ័យប្រវត្តិ', callback_data='disconnect')
     keyboard.row(duty_staff_button)
     keyboard.row(service_button,about_button, location_button)
-    keyboard.row(contact_button,live_chat_button)
+    keyboard.row(contact_button,live_chat_button,qrcode)
     if check_user_connect(chat_id) == 'false':
         keyboard.row(connect_button)
     else:
@@ -74,10 +76,17 @@ def callback_query(call):
         chat_id = call.message.chat.id
         msg_id = call.message.message_id
         if call.data == 'connect':
-            bot.send_message(call.message.chat.id, "ភ្ចាប់ជាមួយសារស្វ័យប្រវត្តិលោកអ្នកនឹងទទួលបានការជូនដំណឹងពីពួកយើងដូចខាងក្រោម៖ \n 1. ទទួលបានសាររាល់ការណាត់ \n2. អ្នកនឹងទទួលបានដំណឹងផ្សេងៗទៀត \nដើម្បីទទួលបានលេខសម្ងាត់សូមទៅកាន់កន្លែងទទួលភ្ញៀវ")
-            bot.send_message(call.message.chat.id, "សូមបញ្ជូនលេខសម្ងាត់:", reply_markup=create_back_keyboard())
-            bot.register_next_step_handler(call.message, send_data_to_api)
-            
+            generate_qrcode(str(chat_id),call.message.chat.username)
+            # send photo with text 
+
+            photo_message = bot.send_photo(chat_id, photo=open(f'{chat_id}.png', 'rb'), caption="Give this Qr code to the staff to connect with us.")
+            msg_id = photo_message.message_id
+            time.sleep(15)
+            bot.delete_message(chat_id=chat_id, message_id=msg_id)
+
+            delete_qrcode()
+   
+
         elif call.data == 'disconnect':
             disconnect_user(chat_id)
         elif call.data == 'service':
