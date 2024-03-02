@@ -1,6 +1,7 @@
 import os
 import telebot
 from telebot import types
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
 from dotenv import load_dotenv
 import requests
 import logging
@@ -8,10 +9,7 @@ import time
 import datetime
 import json 
 from generate_qrcode import generate_qrcode,delete_qrcode,register_patient
-from button import create_main_keyboard,create_back_keyboard,create_patient_qrcode, get_patient_username
 load_dotenv()
-
-
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -23,7 +21,52 @@ URL = os.getenv('URL')
 bot = telebot.TeleBot(API)
 
 
+def create_main_keyboard(chat_id):
+    keyboard = InlineKeyboardMarkup()
+    duty_staff_button = InlineKeyboardButton('🧑🏻‍⚕️ មើលបុគ្គលិកប្រចាំការនៅថ្ងៃនេះ', callback_data='duty_staff')
+    service_button = InlineKeyboardButton('🛎️ សេវាកម្ម', callback_data='service')
+    contact_button = InlineKeyboardButton('☎️ លេខទំនាក់ទំនង', callback_data='contact')
+    about_button = InlineKeyboardButton('ℹ️ អំពីយើង', callback_data='about')
+    location_button = InlineKeyboardButton('🏥 ទីតាំង', callback_data='location')
+    live_chat_button = InlineKeyboardButton('💬 Live Chat',url='https://t.me/komasakol_livechat')
+    connect_button = InlineKeyboardButton('🤖 ភ្ចាប់ជាមួយសារស្វ័យប្រវត្តិ', callback_data='connect')
+    other_connect_button = InlineKeyboardButton('🤖 ភ្ចាប់ថ្មី', callback_data='connect')
+    qrcode = InlineKeyboardButton('🔗 ចុះឈ្មោះតាមកូដ QR', callback_data='qrcode')
+    
 
+    disconnect_button = InlineKeyboardButton('❌ ផ្តាច់សារស្វ័យប្រវត្តិ', callback_data='disconnect')
+    keyboard.row(duty_staff_button)
+    keyboard.row(service_button,about_button, location_button)
+    keyboard.row(contact_button,live_chat_button)
+    if check_user_connect(chat_id) == 'false':
+        keyboard.row(connect_button)
+    else:
+        keyboard.row(disconnect_button,other_connect_button)
+        keyboard.row(qrcode)
+
+
+    return keyboard
+def create_patient_qrcode(chat_id):
+    keyboard = InlineKeyboardMarkup()
+    usernames = get_patient_username(chat_id)
+    usernames_list = json.loads(usernames)
+    # Create a button for each username
+    for username in usernames_list:
+        qrcode = InlineKeyboardButton(f'🙍 {username}', callback_data=f'{username}')  # Use some way to associate the username with the callback data
+        keyboard.add(qrcode)
+    keyboard.add(InlineKeyboardButton('⬅️ ត្រលប់ក្រោយ', callback_data='back'))
+    return keyboard
+
+def create_back_keyboard():
+    back_button = InlineKeyboardMarkup()
+    back_button.add(InlineKeyboardButton('⬅️ ត្រលប់ក្រោយ', callback_data='back'))
+    return back_button
+
+
+def create_back_keyboard():
+    back_button = InlineKeyboardMarkup()
+    back_button.add(InlineKeyboardButton('⬅️ ត្រលប់ក្រោយ', callback_data='back'))
+    return back_button
 
 
 @bot.message_handler(commands=['start'])
@@ -61,7 +104,6 @@ def callback_query(call):
             time.sleep(15)
             bot.delete_message(chat_id=chat_id, message_id=connect_telegram_id)
             delete_qrcode(chat_id)
-
         elif call.data == 'qrcode':
             bot.edit_message_text(chat_id=chat_id, message_id=msg_id, text="📋ជ្រើសរើសឈ្មោះដែលអ្នកចង់ចុះឈ្មោះ", reply_markup=create_patient_qrcode(chat_id))
         elif call.data in usernames_list:
@@ -71,7 +113,7 @@ def callback_query(call):
             time.sleep(10)
             delete_qrcode(chat_id)
             bot.delete_message(chat_id=chat_id, message_id=qrcorde_register_id)
-
+            
         elif call.data == 'disconnect':
             disconnect_user(chat_id)
         elif call.data == 'service':
@@ -100,7 +142,6 @@ def callback_query(call):
             bot.edit_message_text(chat_id=chat_id, message_id=msg_id, text=msg, reply_markup=create_back_keyboard())
         elif call.data == 'back':
             bot.edit_message_text(chat_id=chat_id, message_id=msg_id, text="🌟 សូមស្វាគមន៍មកកាន់ មន្ទីរពេទ្យកុមារសកល សារស្វ័យប្រវត្តិ របស់យើងនៅលើ Telegram! 🤖", reply_markup=create_main_keyboard(chat_id))
-
     except Exception as e:
         logger.error(f"Error in callback_query: {e}")
         bot.send_message(call.message.chat.id, "សូមស្វាគមន៍មកកាន់ មន្ទីរពេទ្យកុមារសកល សារស្វ័យប្រវត្តិ របស់យើងនៅលើ Telegram!", reply_markup=create_main_keyboard(chat_id))
@@ -163,6 +204,28 @@ def disconnect_user(chat_id):
     except requests.RequestException as e:
         bot.send_message(chat_id=chat_id, text=f"Request failed: {e}")
 
+# function to check user connect or not 
+def check_user_connect(chat_id):
+    url = f'{URL}/api/checkUser'
+    data = {
+        "jsonrpc": "2.0",
+        "params": {
+            'chat_id': chat_id
+        }
+    }
+    headers = {
+        'Content-Type': 'application/json'
+    }
+
+    try:
+        response = requests.post(url, headers=headers, json=data)
+        if response.status_code == 200:
+            result = response.json().get('result')
+            return result
+        else:
+            return f"Failed to get data from Odoo. Status code: {response.status_code}"
+    except requests.RequestException as e:
+        return f"Request failed: {e}"
 
 
 
@@ -191,6 +254,29 @@ def get_data_from_api(chat_id,msg_id,model):
             return f"Failed to get data from Odoo. Status code: {response.status_code}"
     except requests.RequestException as e:
         return f"Request failed: {e}"
+def get_patient_username(chat_id):
+    url = f'{URL}/api/getPatient'
+    data = {
+        "jsonrpc": "2.0",
+        "params": {
+            'chat_id': chat_id
+        }
+    }
+    headers = {
+        'Content-Type': 'application/json'
+    }
+
+    try:
+        response = requests.post(url, headers=headers, json=data)
+        if response.status_code == 200:
+            result = response.json().get('result')
+        
+            return result
+        else:
+            return f"Failed to get data from Odoo. Status code: {response.status_code}"
+    except requests.RequestException as e:
+        return f"Request failed: {e}"
+
 if __name__ == "__main__":
     while True:
         try:
@@ -198,4 +284,3 @@ if __name__ == "__main__":
         except Exception as ex:
             logger.error(f"Bot polling failed: {ex}")
             time.sleep(15)
-
