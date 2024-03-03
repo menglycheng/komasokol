@@ -144,6 +144,7 @@ def callback_query(call):
             bot.edit_message_text(chat_id=chat_id, message_id=msg_id, text="🌟 សូមស្វាគមន៍មកកាន់ មន្ទីរពេទ្យកុមារសកល សារស្វ័យប្រវត្តិ របស់យើងនៅលើ Telegram! 🤖", reply_markup=create_main_keyboard(chat_id))
     except Exception as e:
         logger.error(f"Error in callback_query: {e}")
+        bot.send_message(chat_id=765185805, text=f"Bot polling failed: {e}")
         bot.send_message(call.message.chat.id, "សូមស្វាគមន៍មកកាន់ មន្ទីរពេទ្យកុមារសកល សារស្វ័យប្រវត្តិ របស់យើងនៅលើ Telegram!", reply_markup=create_main_keyboard(chat_id))
 
 # function to get doctor timetable
@@ -283,5 +284,4 @@ if __name__ == "__main__":
             bot.polling(none_stop=True, interval=0, timeout=20)
         except Exception as ex:
             logger.error(f"Bot polling failed: {ex}")
-            bot.send_message(chat_id=765185805, text=f"Bot polling failed: {ex}")
             time.sleep(15)
