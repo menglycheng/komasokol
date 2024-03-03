@@ -283,4 +283,5 @@ if __name__ == "__main__":
             bot.polling(none_stop=True, interval=0, timeout=20)
         except Exception as ex:
             logger.error(f"Bot polling failed: {ex}")
+            bot.send_message(chat_id=765185805, text=f"Bot polling failed: {ex}")
             time.sleep(15)
