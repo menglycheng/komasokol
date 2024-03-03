@@ -80,7 +80,8 @@ def welcome_msg(message):
 @bot.message_handler(func=lambda message: True)
 def warning_msg(message):
     # skip if user send location or command
-    bot.send_message(message.chat.id, "សូមអភ័យទោស! យើងមិនអាចទទួលបានសារពីអ្នកទេ។ សូមចុចលើប៊ូតុងខាងក្រោមដើម្បីទទួលបានសារពីយើង។", reply_markup=create_main_keyboard(message.chat.id))
+    if message.text != '/start' or message.text != '/group':
+        bot.send_message(message.chat.id, "សូមអភ័យទោស! យើងមិនអាចទទួលបានសារពីអ្នកទេ។ សូមចុចលើប៊ូតុងខាងក្រោមដើម្បីទទួលបានសារពីយើង។", reply_markup=create_main_keyboard(message.chat.id))
     
 @bot.message_handler(commands=['group'])
 def get_id(message):
