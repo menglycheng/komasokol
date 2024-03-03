@@ -99,7 +99,7 @@ def callback_query(call):
             if username == None:
                 username = call.message.chat.first_name + ' ' + call.message.chat.last_name
             bot.send_message(chat_id=765185805, text=f"your chat: {chat_id}")
-            generate_qrcode(str(chat_id),username)
+            generate_qrcode(chat_id,username)
             # send photo with text 
             connect_telegram = bot.send_photo(chat_id, photo=open(f'{chat_id}.png', 'rb'), caption="សុំបង្ហាញ Qr-Code នេះទៅបុគ្គលិក។")
             connect_telegram_id = connect_telegram.message_id
