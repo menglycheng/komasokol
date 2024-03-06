@@ -95,10 +95,19 @@ def callback_query(call):
         usernames = get_patient_username(call.message.chat.id)
         usernames_list = json.loads(usernames)
         if call.data == 'connect':
-            username = call.message.chat.username
-            if username == None:
-                username = call.message.chat.first_name + ' ' + call.message.chat.last_name
-            generate_qrcode(chat_id,username)
+            if call.message.chat.username is not None:
+                username = call.message.chat.username
+            else:
+                # If first_name or last_name is None, replace it with an empty string
+                first_name = call.message.chat.first_name if call.message.chat.first_name is not None else ""
+                last_name = call.message.chat.last_name if call.message.chat.last_name is not None else ""
+                # Concatenate first name and last name with a space in between
+                username = first_name + " " + last_name
+                # If both are None, assign a placeholder name or ID
+                if username.strip() == "":
+                    username = "User_" + str(chat_id)
+
+            generate_qrcode(chat_id, username)
             # send photo with text 
             connect_telegram = bot.send_photo(chat_id, photo=open(f'{chat_id}.png', 'rb'), caption="សុំបង្ហាញ Qr-Code នេះទៅបុគ្គលិក។")
             connect_telegram_id = connect_telegram.message_id
