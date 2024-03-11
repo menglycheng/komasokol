@@ -20,6 +20,32 @@ URL = os.getenv('URL')
 
 bot = telebot.TeleBot(API)
 
+user_states = {}
+
+def is_user_busy(chat_id, make_busy=False):
+    """Check if the user is busy with an ongoing operation. 
+    If make_busy is True, set the user's state to busy."""
+    if chat_id in user_states:
+        if user_states[chat_id] == 'busy':
+            return True
+        if make_busy:
+            user_states[chat_id] = 'busy'
+            return False
+    else:
+        if make_busy:
+            user_states[chat_id] = 'busy'
+        return False
+
+def free_user(chat_id):
+    """Set the user's state to free."""
+    user_states[chat_id] = 'free'
+
+# create ReplyKeyboardMarkup for restart bot
+def create_restart_keyboard():
+    restart_keyboard = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+    restart_keyboard.add(KeyboardButton('/start'))
+    return restart_keyboard
+
 
 def create_main_keyboard(chat_id):
     keyboard = InlineKeyboardMarkup()
@@ -50,18 +76,11 @@ def create_patient_qrcode(chat_id):
     keyboard = InlineKeyboardMarkup()
     usernames = get_patient_username(chat_id)
     usernames_list = json.loads(usernames)
-    # Create a button for each username
     for username in usernames_list:
-        qrcode = InlineKeyboardButton(f'🙍 {username}', callback_data=f'{username}')  # Use some way to associate the username with the callback data
+        qrcode = InlineKeyboardButton(f'🙍 {username}', callback_data=f'{username}') 
         keyboard.add(qrcode)
     keyboard.add(InlineKeyboardButton('⬅️ ត្រលប់ក្រោយ', callback_data='back'))
     return keyboard
-
-def create_back_keyboard():
-    back_button = InlineKeyboardMarkup()
-    back_button.add(InlineKeyboardButton('⬅️ ត្រលប់ក្រោយ', callback_data='back'))
-    return back_button
-
 
 def create_back_keyboard():
     back_button = InlineKeyboardMarkup()
@@ -87,103 +106,124 @@ def warning_msg(message):
 def get_id(message):
     bot.send_message(message.chat.id, message.chat.id)
 
+def handle_connect(chat_id, call_message, msg_id):
+    username = get_username(call_message)
+    generate_qrcode(chat_id, username)
+    connect_telegram = bot.send_photo(chat_id, photo=open(f'{chat_id}.png', 'rb'), caption="សុំបង្ហាញ Qr-Code នេះទៅបុគ្គលិក។")
+    connect_telegram_id = connect_telegram.message_id
+    bot.delete_message(chat_id=chat_id, message_id=msg_id)
+    time.sleep(15)
+    bot.delete_message(chat_id=chat_id, message_id=connect_telegram_id)
+    delete_qrcode(chat_id)
+
+def handle_qrcode(chat_id, msg_id):
+    bot.edit_message_text(chat_id=chat_id, message_id=msg_id, text="📋ជ្រើសរើសឈ្មោះដែលអ្នកចង់ចុះឈ្មោះ", reply_markup=create_patient_qrcode(chat_id))
+
+def handle_usernames_list(call_data, chat_id, usernames_list):
+    if call_data in usernames_list:
+        msg = bot.send_message(chat_id, f"កំពុងដំណើរការ សូមរង់ចាំ...")
+        register_patient(chat_id, call_data)
+        send_qrcode_registration_confirmation(chat_id, call_data, msg.message_id)
+
+
+def handle_service_requests(call_data, chat_id, msg_id):
+    # Assuming get_data_from_api is a function that fetches and sends data based on 'service', 'contact', etc.
+    get_data_from_api(chat_id, msg_id, call_data)
+
+def send_qrcode_registration_confirmation(chat_id, patient_name, msg_id):
+    qrcode_register = bot.send_photo(chat_id, photo=open(f'{chat_id}.png', 'rb'), caption=f"នេះជា Qr Code របស់ {patient_name}")
+    bot.delete_message(chat_id=chat_id, message_id=msg_id)
+    qrcode_register_id = qrcode_register.message_id
+    time.sleep(10)
+    delete_qrcode(chat_id)
+    bot.delete_message(chat_id=chat_id, message_id=qrcode_register_id)
+
+def get_username(message):
+    if message.chat.username:
+        return message.chat.username
+    first_name = message.chat.first_name or ""
+    last_name = message.chat.last_name or ""
+    full_name = f"{first_name} {last_name}".strip()
+    return full_name if full_name else f"User_{message.chat.id}"
+
+def error_msg(e,chat_id,call):
+    logger.error(f"Error in callback_query: {e}")
+    bot.send_message(chat_id=765185805, text=f"Bot polling failed:{chat_id}-{call.data}-{e}")
+    bot.send_message(chat_id=chat_id, text="⚠️ ប្រព័ន្ធរបស់យើងប្រហែលជាមានបញ្ហាខ្លះ \nសូមព្យាយាមម្តងទៀតដោយចុចលើប៊ូតុងខាងក្រោម។", reply_markup=create_restart_keyboard())
+
+
 @bot.callback_query_handler(func=lambda call: True)
 def callback_query(call):
+    chat_id = call.message.chat.id
+    if is_user_busy(chat_id, make_busy=True):
+        bot.answer_callback_query(call.id, "Please wait for the current operation to complete.")
+        return
     try:
         chat_id = call.message.chat.id
         msg_id = call.message.message_id
-        usernames = get_patient_username(call.message.chat.id)
-        usernames_list = json.loads(usernames)
+
         if call.data == 'connect':
-            if call.message.chat.username is not None:
-                username = call.message.chat.username
-            else:
-                # If first_name or last_name is None, replace it with an empty string
-                first_name = call.message.chat.first_name if call.message.chat.first_name is not None else ""
-                last_name = call.message.chat.last_name if call.message.chat.last_name is not None else ""
-                # Concatenate first name and last name with a space in between
-                username = first_name + " " + last_name
-                # If both are None, assign a placeholder name or ID
-                if username.strip() == "":
-                    username = "User_" + str(chat_id)
-
-            generate_qrcode(chat_id, username)
-            # send photo with text 
-            connect_telegram = bot.send_photo(chat_id, photo=open(f'{chat_id}.png', 'rb'), caption="សុំបង្ហាញ Qr-Code នេះទៅបុគ្គលិក។")
-            connect_telegram_id = connect_telegram.message_id
-            time.sleep(15)
-            bot.delete_message(chat_id=chat_id, message_id=connect_telegram_id)
-            delete_qrcode(chat_id)
+            try:
+                msg = bot.edit_message_text(chat_id=chat_id, message_id=msg_id, text="កំពុងដំណើរការ សូមរង់ចាំ...")
+                handle_connect(chat_id, call.message, msg.message_id)
+                bot.send_message(chat_id=chat_id, text="🌟 សូមស្វាគមន៍មកកាន់ មន្ទីរពេទ្យកុមារសកល សារស្វ័យប្រវត្តិ របស់យើងនៅលើ Telegram! 🤖", reply_markup=create_main_keyboard(chat_id))
+            except Exception as e:
+                error_msg(e,chat_id,call)
         elif call.data == 'qrcode':
-            bot.edit_message_text(chat_id=chat_id, message_id=msg_id, text="📋ជ្រើសរើសឈ្មោះដែលអ្នកចង់ចុះឈ្មោះ", reply_markup=create_patient_qrcode(chat_id))
-        elif call.data in usernames_list:
-            register_patient(chat_id,call.data)
-            qrcorde_register = bot.send_photo(chat_id, photo=open(f'{chat_id}.png', 'rb'), caption=f"នេះជា Qr Code របស់ {call.data}")
-            qrcorde_register_id = qrcorde_register.message_id
-            time.sleep(10)
-            delete_qrcode(chat_id)
-            bot.delete_message(chat_id=chat_id, message_id=qrcorde_register_id)
-            
+            try:
+                msg = bot.edit_message_text(chat_id=chat_id, message_id=msg_id, text="កំពុងដំណើរការ សូមរង់ចាំ...")
+                handle_qrcode(chat_id, msg_id)
+            except Exception as e:
+                error_msg(e,chat_id,call)
         elif call.data == 'disconnect':
-            disconnect_user(chat_id)
-        elif call.data == 'service':
-            get_data_from_api(chat_id,msg_id,'service')
-            # getUpdates
-        elif call.data == 'contact':
-            get_data_from_api(chat_id,msg_id,'contact')
-        elif call.data == 'about':
-            get_data_from_api(chat_id,msg_id,'about')
-        elif call.data == 'location':
-            get_data_from_api(chat_id,msg_id,'location')
+            try:
+                disconnect_user(chat_id)
+            except Exception as e:
+                error_msg(e,chat_id,call)
+        elif call.data in ['service', 'contact', 'about', 'location']:
+            try:
+                bot.edit_message_text(chat_id=chat_id, message_id=msg_id, text="កំពុងដំណើរការ សូមរង់ចាំ...")
+                handle_service_requests(call.data, chat_id, msg_id)
+            except Exception as e:
+                error_msg(e,chat_id,call)
         elif call.data == 'duty_staff':
-            current_date = datetime.datetime.now().strftime("%d/%m/%Y")
-            morning_timetable = "\nវេនពេលព្រឹក៖ \n"
-            afternoon_timetable = "\nវេនពេលរសៀល៖ \n"
-            night_timetable = "\nវេនពេលយប់៖ \n"
-            doctor_timetable = json.loads(get_doctor_timetable())
-            for doctor in doctor_timetable['morning_shift']:
-                morning_timetable += f"🧑🏻‍⚕️ Dr. {doctor} \n"
-            for doctor in doctor_timetable['afternoon_shift']:
-                afternoon_timetable += f"🧑🏻‍⚕️ Dr. {doctor} \n"
-            for doctor in doctor_timetable['night_shift']:
-                night_timetable += f"🧑🏻‍⚕️ Dr. {doctor} \n"
+            # msg loading
+            try:
+                bot.edit_message_text(chat_id=chat_id, message_id=msg_id, text="កំពុងដំណើរការ សូមរង់ចាំ...")
+                current_date = datetime.datetime.now().strftime("%d/%m/%Y")
+                morning_timetable = "\nវេនពេលព្រឹក៖ \n"
+                afternoon_timetable = "\nវេនពេលរសៀល៖ \n"
+                night_timetable = "\nវេនពេលយប់៖ \n"
+                doctor_timetable = json.loads(get_doctor_timetable())
+                for doctor in doctor_timetable['morning_shift']:
+                    morning_timetable += f"🧑🏻‍⚕️ Dr. {doctor} \n"
+                for doctor in doctor_timetable['afternoon_shift']:
+                    afternoon_timetable += f"🧑🏻‍⚕️ Dr. {doctor} \n"
+                for doctor in doctor_timetable['night_shift']:
+                    night_timetable += f"🧑🏻‍⚕️ Dr. {doctor} \n"
 
-            msg = f'🧑🏻‍⚕️គ្រូពេទ្យប្រចាំការថ្ងៃនេះ : \n🗓️ {current_date} \n --------------------\n{morning_timetable} {afternoon_timetable} {night_timetable} \n⚠️៖​ មន្ទីរពេទ្យយើងរក្សាសិទ្ធិក្នុងការផ្លាស់ប្តូរដោយពុំបាច់ជូនដំណឹងជាមុន '
-            bot.edit_message_text(chat_id=chat_id, message_id=msg_id, text=msg, reply_markup=create_back_keyboard())
+                msg = f'🧑🏻‍⚕️គ្រូពេទ្យប្រចាំការថ្ងៃនេះ : \n🗓️ {current_date} \n --------------------\n{morning_timetable} {afternoon_timetable} {night_timetable} \n⚠️៖​ មន្ទីរពេទ្យយើងរក្សាសិទ្ធិក្នុងការផ្លាស់ប្តូរដោយពុំបាច់ជូនដំណឹងជាមុន '
+                bot.edit_message_text(chat_id=chat_id, message_id=msg_id, text=msg, reply_markup=create_back_keyboard())
+            except Exception as e:
+                error_msg(e,chat_id,call)
+                
         elif call.data == 'back':
-            bot.edit_message_text(chat_id=chat_id, message_id=msg_id, text="🌟 សូមស្វាគមន៍មកកាន់ មន្ទីរពេទ្យកុមារសកល សារស្វ័យប្រវត្តិ របស់យើងនៅលើ Telegram! 🤖", reply_markup=create_main_keyboard(chat_id))
+            try:
+                bot.edit_message_text(chat_id=chat_id, message_id=msg_id, text="🌟 សូមស្វាគមន៍មកកាន់ មន្ទីរពេទ្យកុមារសកល សារស្វ័យប្រវត្តិ របស់យើងនៅលើ Telegram! 🤖", reply_markup=create_main_keyboard(chat_id))
+            except Exception as e:
+                error_msg(e,chat_id,call)
+        else:
+            usernames = get_patient_username(chat_id)
+            usernames_list = json.loads(usernames)
+            handle_usernames_list(call.data, chat_id, usernames_list)
     except Exception as e:
-        logger.error(f"Error in callback_query: {e}")
-
-        bot.send_message(chat_id=765185805, text=f"Bot polling failed:{call.message.chat.id}-{e}")
-        bot.send_message(call.message.chat.id, "សូមស្វាគមន៍មកកាន់ មន្ទីរពេទ្យកុមារសកល សារស្វ័យប្រវត្តិ របស់យើងនៅលើ Telegram!", reply_markup=create_main_keyboard(chat_id))
+        error_msg(e,chat_id,call)
+    finally:
+        free_user(chat_id)
+ 
 
 # function to get doctor timetable
-def get_doctor_timetable():
-    url = f'{URL}/api/doctor_timetable'
-    # get current month 
-    now = datetime.datetime.now()
-    current_month = now.strftime("%B")
-    print(current_month)
-    data = {
-        "jsonrpc": "2.0",
-        "params": {
-            'month': current_month
-        }
-    }
-    headers = {
-        'Content-Type': 'application/json'
-    }
 
-    try:
-        response = requests.post(url, headers=headers, json=data)
-        if response.status_code == 200:
-            result = response.json().get('result')
-            return result
-        else:
-            return f"Failed to get data from Odoo. Status code: {response.status_code}"
-    except requests.RequestException as e:
-        return f"Request failed: {e}"
 
 # function to disconnect user
 def disconnect_user(chat_id):
@@ -210,7 +250,8 @@ def disconnect_user(chat_id):
             else:
                 bot.send_message(chat_id=chat_id, text="សូមព្យាយាមម្តងទៀត.", reply_markup=create_back_keyboard())
         else:
-            bot.send_message(chat_id=chat_id, text=f"Failed to send data to Odoo. Status code: {response.status_code}", reply_markup=create_back_keyboard())
+            bot.send_message(chat_id=chat_id,text="ប្រព័ន្ធរបស់យើងប្រហែលជាមានបញ្ហាខ្លះ សូមព្យាយាមម្តងទៀត.", reply_markup=create_restart_keyboard())
+            bot.send_message(chat_id=765185805, text=f"disconnectTelegram - Failed to send data to Odoo. Status code: {response.status_code}", reply_markup=create_back_keyboard())
         
 
     except requests.RequestException as e:
@@ -288,6 +329,32 @@ def get_patient_username(chat_id):
             return f"Failed to get data from Odoo. Status code: {response.status_code}"
     except requests.RequestException as e:
         return f"Request failed: {e}"
+
+def get_doctor_timetable():
+    url = f'{URL}/api/doctor_timetable'
+    # get current month 
+    now = datetime.datetime.now()
+    current_month = now.strftime("%B")
+    print(current_month)
+    data = {
+        "jsonrpc": "2.0",
+        "params": {
+            'month': current_month
+        }
+    }
+    headers = {
+        'Content-Type': 'application/json'
+    }
+
+    try:
+        response = requests.post(url, headers=headers, json=data)
+        if response.status_code == 200:
+            result = response.json().get('result')
+            return result
+        else:
+            return f"Failed to get data from Odoo. Status code: {response.status_code}"
+    except requests.RequestException as e:
+        return f"Request failed : {e}"
 
 if __name__ == "__main__":
     while True:
