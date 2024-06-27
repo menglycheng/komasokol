@@ -60,7 +60,7 @@ def create_main_keyboard(chat_id):
     live_chat_button = InlineKeyboardButton('💬 Live Chat',LIVE_CHAT)
     connect_button = InlineKeyboardButton('🤖 ភ្ចាប់ជាមួយសារស្វ័យប្រវត្តិ', callback_data='connect')
     other_connect_button = InlineKeyboardButton('🤖 ភ្ចាប់ថ្មី', callback_data='connect')
-    qrcode = InlineKeyboardButton('អ្នកជំងឺ', callback_data='qrcode')
+    qrcode = InlineKeyboardButton('ចូលមើលអ្នកជំងឺ', callback_data='qrcode')
     
 
     disconnect_button = InlineKeyboardButton('❌ ផ្តាច់សារស្វ័យប្រវត្តិ', callback_data='disconnect')
@@ -125,7 +125,7 @@ def handle_connect(chat_id, call_message, msg_id):
     delete_qrcode(chat_id)
 
 def handle_qrcode(chat_id, msg_id):
-    bot.edit_message_text(chat_id=chat_id, message_id=msg_id, text="📋ជ្រើសរើសឈ្មោះដែលអ្នកចង់ចុះឈ្មោះ", reply_markup=create_patient_qrcode(chat_id))
+    bot.edit_message_text(chat_id=chat_id, message_id=msg_id, text="📋សូមជ្រើសរើសឈ្មោះអ្នកជំងឺ", reply_markup=create_patient_qrcode(chat_id))
 
 def handle_usernames_list(call_data, chat_id, usernames_list):
     if call_data in usernames_list:
