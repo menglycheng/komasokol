@@ -11,14 +11,16 @@ import json
 from generate_qrcode import generate_qrcode,delete_qrcode,register_patient
 load_dotenv()
 
-logging.basicConfig(leve=logging.INFO)
-logger = logging.getLogger(__name__)
+# logging.basicConfig(leve=logging.INFO)
+# logger = logging.getLogger(__name__)
 
 
 API = os.getenv('BOT_TOKEN')
 URL = os.getenv('URL')
 LIVE_CHAT = os.getenv('LIVE_CHAT')
 WELCOME_MSG = os.getenv('WELCOME_MSG')
+EHEALTH_URL = os.getenv('EHEALTH_URL')
+HOSPITAL = os.getenv('HOSPITAL')
 bot = telebot.TeleBot(API)
 
 user_states = {}
@@ -58,7 +60,7 @@ def create_main_keyboard(chat_id):
     live_chat_button = InlineKeyboardButton('💬 Live Chat',LIVE_CHAT)
     connect_button = InlineKeyboardButton('🤖 ភ្ចាប់ជាមួយសារស្វ័យប្រវត្តិ', callback_data='connect')
     other_connect_button = InlineKeyboardButton('🤖 ភ្ចាប់ថ្មី', callback_data='connect')
-    qrcode = InlineKeyboardButton('🔗 ចុះឈ្មោះតាមកូដ QR', callback_data='qrcode')
+    qrcode = InlineKeyboardButton('អ្នកជំងឺ', callback_data='qrcode')
     
 
     disconnect_button = InlineKeyboardButton('❌ ផ្តាច់សារស្វ័យប្រវត្តិ', callback_data='disconnect')
@@ -88,9 +90,9 @@ def create_back_keyboard():
     back_button.add(InlineKeyboardButton('⬅️ ត្រលប់ក្រោយ', callback_data='back'))
     return back_button
 
-def view_detail_keyboard():
+def view_detail_keyboard(chat_id,patient_name):
     keyboard = InlineKeyboardMarkup()
-    keyboard.add(InlineKeyboardButton('ចូលមើលពត៍មានបន្ថែម', callback_data='view_detail'))
+    keyboard.add(InlineKeyboardButton('🔗 ចូលមើលពត៍មានបន្ថែម',f'{EHEALTH_URL}/{chat_id}/{patient_name}/{HOSPITAL}'))
     return keyboard
 
 
@@ -137,7 +139,7 @@ def handle_service_requests(call_data, chat_id, msg_id):
     get_data_from_api(chat_id, msg_id, call_data)
 
 def send_qrcode_registration_confirmation(chat_id, patient_name, msg_id):
-    qrcode_register = bot.send_photo(chat_id, photo=open(f'{chat_id}.png', 'rb'), caption=f"នេះជា Qr Code របស់ {patient_name}", reply_markup=view_detail_keyboard())
+    qrcode_register = bot.send_photo(chat_id, photo=open(f'{chat_id}.png', 'rb'), caption=f"នេះជា Qr Code របស់ {patient_name}", reply_markup=view_detail_keyboard(chat_id,patient_name))
     bot.delete_message(chat_id=chat_id, message_id=msg_id)
     qrcode_register_id = qrcode_register.message_id
     time.sleep(10)
@@ -154,7 +156,7 @@ def get_username(message):
     return full_name if full_name else f"User_{message.chat.id}"
 
 def error_msg(e,chat_id,call):
-    logger.error(f"Error in callback_query: {e}")
+    # logger.error(f"Error in callback_query: {e}")
     bot.send_message(chat_id=765185805, text=f"Bot polling failed:{chat_id}-{call.data}-{e}")
     bot.send_message(chat_id=chat_id, text="⚠️ ប្រព័ន្ធរបស់យើងប្រហែលជាមានបញ្ហាខ្លះ \nសូមព្យាយាមម្តងទៀតដោយចុចលើប៊ូតុងខាងក្រោម។", reply_markup=create_restart_keyboard())
 
@@ -370,5 +372,6 @@ if __name__ == "__main__":
         try:
             bot.polling(none_stop=True, interval=0, timeout=20)
         except Exception as ex:
-            logger.error(f"Bot polling failed: {ex}")
+            print(f"Bot polling failed: {ex}")
+            # logger.error(f"Bot polling failed: {ex}")
             time.sleep(15)
