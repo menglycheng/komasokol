@@ -11,13 +11,14 @@ import json
 from generate_qrcode import generate_qrcode,delete_qrcode,register_patient
 load_dotenv()
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(leve=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 API = os.getenv('BOT_TOKEN')
 URL = os.getenv('URL')
-
+LIVE_CHAT = os.getenv('LIVE_CHAT')
+WELCOME_MSG = os.getenv('WELCOME_MSG')
 bot = telebot.TeleBot(API)
 
 user_states = {}
@@ -54,7 +55,7 @@ def create_main_keyboard(chat_id):
     contact_button = InlineKeyboardButton('☎️ លេខទំនាក់ទំនង', callback_data='contact')
     about_button = InlineKeyboardButton('ℹ️ អំពីយើង', callback_data='about')
     location_button = InlineKeyboardButton('🏥 ទីតាំង', callback_data='location')
-    live_chat_button = InlineKeyboardButton('💬 Live Chat',url='https://t.me/komasakol_livechat')
+    live_chat_button = InlineKeyboardButton('💬 Live Chat',LIVE_CHAT)
     connect_button = InlineKeyboardButton('🤖 ភ្ចាប់ជាមួយសារស្វ័យប្រវត្តិ', callback_data='connect')
     other_connect_button = InlineKeyboardButton('🤖 ភ្ចាប់ថ្មី', callback_data='connect')
     qrcode = InlineKeyboardButton('🔗 ចុះឈ្មោះតាមកូដ QR', callback_data='qrcode')
@@ -87,11 +88,16 @@ def create_back_keyboard():
     back_button.add(InlineKeyboardButton('⬅️ ត្រលប់ក្រោយ', callback_data='back'))
     return back_button
 
+def view_detail_keyboard():
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(InlineKeyboardButton('ចូលមើលពត៍មានបន្ថែម', callback_data='view_detail'))
+    return keyboard
+
 
 @bot.message_handler(commands=['start'])
 def welcome_msg(message):
     try:
-        bot.send_message(message.chat.id, "🌟 សូមស្វាគមន៍មកកាន់ មន្ទីរពេទ្យកុមារសកល សារស្វ័យប្រវត្តិ របស់យើងនៅលើ Telegram! 🤖", reply_markup=create_main_keyboard(message.chat.id))
+        bot.send_message(message.chat.id,WELCOME_MSG, reply_markup=create_main_keyboard(message.chat.id))
     except Exception as e:
         print(repr(e))
         bot.send_message(message.chat.id, "សូមស្វាគមន៍មកកាន់ មន្ទីរពេទ្យកុមារសកល សារស្វ័យប្រវត្តិ របស់យើងនៅលើ Telegram!", reply_markup=create_main_keyboard(message.chat.id))
@@ -131,12 +137,13 @@ def handle_service_requests(call_data, chat_id, msg_id):
     get_data_from_api(chat_id, msg_id, call_data)
 
 def send_qrcode_registration_confirmation(chat_id, patient_name, msg_id):
-    qrcode_register = bot.send_photo(chat_id, photo=open(f'{chat_id}.png', 'rb'), caption=f"នេះជា Qr Code របស់ {patient_name}")
+    qrcode_register = bot.send_photo(chat_id, photo=open(f'{chat_id}.png', 'rb'), caption=f"នេះជា Qr Code របស់ {patient_name}", reply_markup=view_detail_keyboard())
     bot.delete_message(chat_id=chat_id, message_id=msg_id)
     qrcode_register_id = qrcode_register.message_id
     time.sleep(10)
     delete_qrcode(chat_id)
     bot.delete_message(chat_id=chat_id, message_id=qrcode_register_id)
+
 
 def get_username(message):
     if message.chat.username:
@@ -166,7 +173,7 @@ def callback_query(call):
             try:
                 msg = bot.edit_message_text(chat_id=chat_id, message_id=msg_id, text="កំពុងដំណើរការ សូមរង់ចាំ...")
                 handle_connect(chat_id, call.message, msg.message_id)
-                bot.send_message(chat_id=chat_id, text="🌟 សូមស្វាគមន៍មកកាន់ មន្ទីរពេទ្យកុមារសកល សារស្វ័យប្រវត្តិ របស់យើងនៅលើ Telegram! 🤖", reply_markup=create_main_keyboard(chat_id))
+                bot.send_message(chat_id=chat_id, text=WELCOME_MSG, reply_markup=create_main_keyboard(chat_id))
             except Exception as e:
                 error_msg(e,chat_id,call)
         elif call.data == 'qrcode':
@@ -206,6 +213,8 @@ def callback_query(call):
                 bot.edit_message_text(chat_id=chat_id, message_id=msg_id, text=msg, reply_markup=create_back_keyboard())
             except Exception as e:
                 error_msg(e,chat_id,call)
+        elif call.data == 'view_detail':
+            print("view detail")
                 
         elif call.data == 'back':
             try:
@@ -246,7 +255,7 @@ def disconnect_user(chat_id):
             if result == 'true':
                 bot.send_message(chat_id=chat_id, text="អ្នកបានផ្តាច់ចេញពីសារស្វ័យប្រវត្តិរបស់យើងហើយ!")
                 # resend welcome message with button again 
-                bot.send_message(chat_id=chat_id, text="🌟 សូមស្វាគមន៍មកកាន់ មន្ទីរពេទ្យកុមារសកល សារស្វ័យប្រវត្តិ របស់យើងនៅលើ Telegram! 🤖", reply_markup=create_main_keyboard(chat_id))
+                bot.send_message(chat_id=chat_id, text=WELCOME_MSG, reply_markup=create_main_keyboard(chat_id))
             else:
                 bot.send_message(chat_id=chat_id, text="សូមព្យាយាមម្តងទៀត.", reply_markup=create_back_keyboard())
         else:
