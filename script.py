@@ -95,7 +95,7 @@ def create_back_keyboard():
 
 def view_detail_keyboard(chat_id,patient_name):
     keyboard = InlineKeyboardMarkup()
-    keyboard.add(InlineKeyboardButton('🔗 ចូលមើលពត៍មានបន្ថែម',f'{EHEALTH_URL}/{encrypt_message(str(chat_id),SERCET_KEY)}/{patient_name}/{HOSPITAL}'))
+    keyboard.add(InlineKeyboardButton('🔗 ចូលមើលពត៍មានបន្ថែម',f'{EHEALTH_URL}/{chat_id}/{patient_name}/{HOSPITAL}'))
     return keyboard
 
 
