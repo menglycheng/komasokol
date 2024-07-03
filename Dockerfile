@@ -14,7 +14,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the script and any other necessary files
 COPY script.py .
 COPY generate_qrcode.py .
-COPY encryption.py .
 
 # Expose the port your script is listening on (if applicable)
 EXPOSE 80
