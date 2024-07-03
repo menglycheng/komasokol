@@ -5,7 +5,8 @@ import urllib.parse
 def encrypt_message(message, key):
     cipher_suite = Fernet(key.encode())
     ciphertext = cipher_suite.encrypt(message.encode())
-    encoded_ciphertext = urllib.parse.quote(ciphertext)
+    encoded_ciphertext = urllib.parse.quote(ciphertext.decode())
+
     return encoded_ciphertext
 
 
