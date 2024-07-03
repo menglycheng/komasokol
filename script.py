@@ -23,7 +23,6 @@ WELCOME_MSG = os.getenv('WELCOME_MSG')
 EHEALTH_URL = os.getenv('EHEALTH_URL')
 HOSPITAL = os.getenv('HOSPITAL')
 bot = telebot.TeleBot(API)
-SERCET_KEY = os.getenv('SERCET_KEY')
 
 
 user_states = {}
