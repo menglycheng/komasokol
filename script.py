@@ -8,12 +8,8 @@ import logging
 import time
 import datetime
 import json 
-from encryption import encrypt_message
 from generate_qrcode import generate_qrcode,delete_qrcode,register_patient
 load_dotenv()
-
-# logging.basicConfig(leve=logging.INFO)
-# logger = logging.getLogger(__name__)
 
 
 API = os.getenv('BOT_TOKEN')
