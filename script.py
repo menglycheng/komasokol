@@ -8,6 +8,7 @@ import logging
 import time
 import datetime
 import json 
+from encryption import encrypt_message
 from generate_qrcode import generate_qrcode,delete_qrcode,register_patient
 load_dotenv()
 
@@ -22,6 +23,8 @@ WELCOME_MSG = os.getenv('WELCOME_MSG')
 EHEALTH_URL = os.getenv('EHEALTH_URL')
 HOSPITAL = os.getenv('HOSPITAL')
 bot = telebot.TeleBot(API)
+SERCET_KEY = os.getenv('SERCET_KEY')
+
 
 user_states = {}
 
@@ -92,7 +95,7 @@ def create_back_keyboard():
 
 def view_detail_keyboard(chat_id,patient_name):
     keyboard = InlineKeyboardMarkup()
-    keyboard.add(InlineKeyboardButton('🔗 ចូលមើលពត៍មានបន្ថែម',f'{EHEALTH_URL}/{chat_id}/{patient_name}/{HOSPITAL}'))
+    keyboard.add(InlineKeyboardButton('🔗 ចូលមើលពត៍មានបន្ថែម',f'{EHEALTH_URL}/{encrypt_message(chat_id,SERCET_KEY)}/{patient_name}/{HOSPITAL}'))
     return keyboard
 
 
