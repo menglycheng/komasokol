@@ -102,7 +102,7 @@ def welcome_msg(message):
         bot.send_message(message.chat.id,WELCOME_MSG, reply_markup=create_main_keyboard(message.chat.id))
     except Exception as e:
         print(repr(e))
-        bot.send_message(message.chat.id, "សូមស្វាគមន៍មកកាន់ មន្ទីរពេទ្យកុមារសកល សារស្វ័យប្រវត្តិ របស់យើងនៅលើ Telegram!", reply_markup=create_main_keyboard(message.chat.id))
+        bot.send_message(message.chat.id, WELCOME_MSG, reply_markup=create_main_keyboard(message.chat.id))
 # warning user if they send message to bot
 @bot.message_handler(func=lambda message: True)
 def warning_msg(message):
