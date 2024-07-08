@@ -8,6 +8,7 @@ import logging
 import time
 import datetime
 import json 
+from encrytion import encrypt_message_ctr
 from generate_qrcode import generate_qrcode,delete_qrcode,register_patient
 load_dotenv()
 
@@ -92,7 +93,7 @@ def create_back_keyboard():
 
 def view_detail_keyboard(chat_id,patient_name):
     keyboard = InlineKeyboardMarkup()
-    keyboard.add(InlineKeyboardButton('🔗 ចូលមើលពត៍មានបន្ថែម',f'{EHEALTH_URL}/{chat_id}/{patient_name}/{HOSPITAL}'))
+    keyboard.add(InlineKeyboardButton('🔗 ចូលមើលពត៍មានបន្ថែម',f'{EHEALTH_URL}/{encrypt_message_ctr(str(chat_id))}/{encrypt_message_ctr(str(patient_name))}/{encrypt_message_ctr(str(HOSPITAL))}'))
     return keyboard
 
 
