@@ -11,6 +11,9 @@ import json
 from generate_qrcode import generate_qrcode,delete_qrcode,register_patient
 load_dotenv()
 
+# logging.basicConfig(leve=logging.INFO)
+# logger = logging.getLogger(__name__)
+
 
 API = os.getenv('BOT_TOKEN')
 URL = os.getenv('URL')
@@ -19,7 +22,6 @@ WELCOME_MSG = os.getenv('WELCOME_MSG')
 EHEALTH_URL = os.getenv('EHEALTH_URL')
 HOSPITAL = os.getenv('HOSPITAL')
 bot = telebot.TeleBot(API)
-
 
 user_states = {}
 
@@ -173,7 +175,7 @@ def callback_query(call):
             try:
                 msg = bot.edit_message_text(chat_id=chat_id, message_id=msg_id, text="កំពុងដំណើរការ សូមរង់ចាំ...")
                 handle_connect(chat_id, call.message, msg.message_id)
-                # bot.send_message(chat_id=chat_id, text=WELCOME_MSG, reply_markup=create_main_keyboard(chat_id))
+                bot.send_message(chat_id=chat_id, text=WELCOME_MSG, reply_markup=create_main_keyboard(chat_id))
             except Exception as e:
                 error_msg(e,chat_id,call)
         elif call.data == 'qrcode':
