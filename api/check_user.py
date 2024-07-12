@@ -6,13 +6,7 @@ URL = os.getenv("URL")
 API_KEY = os.getenv("API_KEY")
 
 def check_user_connect(chat_id):
-    url = f'{URL}/v1/api/checkUser'
-    data = {
-        "jsonrpc": "2.0",
-        "params": {
-            'chat_id': chat_id
-        }
-    }
+    url = f'{URL}/v1/api/checkUser?chat_id={chat_id}'
     headers = {
         'Content-Type': 'application/json',
         'Authorization': f'Bearer {API_KEY}'
@@ -20,7 +14,7 @@ def check_user_connect(chat_id):
     }
 
     try:
-        response = requests.post(url, headers=headers, json=data)
+        response = requests.get(url, headers=headers)
         if response.status_code == 200:
             result = response.json().get('result')
             return result
