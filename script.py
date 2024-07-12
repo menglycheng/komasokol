@@ -299,7 +299,7 @@ def get_data_from_api(chat_id,msg_id,model):
             # split result with '\n' to make new line
             msg = result.replace('"','').replace('\\n','\n')
 
-            bot.edit_message_text(chat_id=chat_id, message_id=msg_id, text=msg, reply_markup=create_back_keyboard())
+            bot.edit_message_text(chat_id=chat_id, message_id=msg_id, text=result, reply_markup=create_back_keyboard())
             return result
         else:
             return f"Failed to get data from Odoo. Status code: {response.status_code}"
