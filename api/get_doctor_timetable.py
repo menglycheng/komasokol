@@ -23,7 +23,7 @@ def get_doctor_timetable():
     }
 
     try:
-        response = requests.post(url, headers=headers, json=data)
+        response = requests.get(url, headers=headers, json=data)
         if response.status_code == 200:
             result = response.json().get('result')
             return result
