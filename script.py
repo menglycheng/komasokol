@@ -10,6 +10,7 @@ import datetime
 import json 
 from encryption import encrypt_message_ctr
 from generate_qrcode import generate_qrcode,delete_qrcode,register_patient
+from api.check_premium import checkPremium
 load_dotenv()
 
 # logging.basicConfig(leve=logging.INFO)
@@ -59,21 +60,23 @@ def create_main_keyboard(chat_id):
     about_button = InlineKeyboardButton('ℹ️ អំពីយើង', callback_data='about')
     location_button = InlineKeyboardButton('🏥 ទីតាំង', callback_data='location')
     live_chat_button = InlineKeyboardButton('💬 Live Chat',LIVE_CHAT)
+    # premium
     connect_button = InlineKeyboardButton('🤖 ភ្ចាប់ជាមួយសារស្វ័យប្រវត្តិ', callback_data='connect')
     other_connect_button = InlineKeyboardButton('🤖 ភ្ចាប់ថ្មី', callback_data='connect')
     qrcode = InlineKeyboardButton('ចូលមើលអ្នកជំងឺ', callback_data='qrcode')
-    
-
     disconnect_button = InlineKeyboardButton('❌ ផ្តាច់សារស្វ័យប្រវត្តិ', callback_data='disconnect')
+    
     keyboard.row(duty_staff_button)
     keyboard.row(service_button,about_button, location_button)
     keyboard.row(contact_button,live_chat_button)
-    if check_user_connect(chat_id) == 'false':
-        keyboard.row(connect_button)
-    else:
-        keyboard.row(disconnect_button,other_connect_button)
-        keyboard.row(qrcode)
 
+    isPremiun = checkPremium()
+    if isPremiun:
+        if check_user_connect(chat_id) == 'false':
+            keyboard.row(connect_button)
+        else:
+            keyboard.row(disconnect_button,other_connect_button)
+            keyboard.row(qrcode)
 
     return keyboard
 def create_patient_qrcode(chat_id):
@@ -109,7 +112,8 @@ def welcome_msg(message):
 def warning_msg(message):
     # skip if user send location or command
     if message.text != '/start' or message.text != '/group':
-        bot.send_message(message.chat.id, "សូមអភ័យទោស! យើងមិនអាចទទួលបានសារពីអ្នកទេ។ សូមចុចលើប៊ូតុងខាងក្រោមដើម្បីទទួលបានសារពីយើង។", reply_markup=create_main_keyboard(message.chat.id))
+        
+        bot.send_message(message.chat.id, f"សូមអភ័យទោស! យើងមិនអាចទទួលបានសារពីអ្នកទេ។ សូមចុចលើប៊ូតុងខាងក្រោមដើម្បីទទួលបានសារពីយើង។", reply_markup=create_main_keyboard(message.chat.id))
     
 @bot.message_handler(commands=['group'])
 def get_id(message):
@@ -367,6 +371,8 @@ def get_doctor_timetable():
             return f"Failed to get data from Odoo. Status code: {response.status_code}"
     except requests.RequestException as e:
         return f"Request failed : {e}"
+
+
 
 if __name__ == "__main__":
     while True:
