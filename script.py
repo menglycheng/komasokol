@@ -71,7 +71,7 @@ def create_main_keyboard(chat_id):
     keyboard.row(contact_button,live_chat_button)
 
     isPremiun = checkPremium()
-    if isPremiun == "true":
+    if isPremiun == True:
         if check_user_connect(chat_id) == 'false':
             keyboard.row(connect_button)
         else:
