@@ -11,6 +11,9 @@ import json
 from encryption import encrypt_message_ctr
 from generate_qrcode import generate_qrcode,delete_qrcode,register_patient
 from api.check_premium import checkPremium
+from api.check_user import check_user_connect
+from api.get_patient_username import get_patient_username
+from api.get_doctor_timetable import get_doctor_timetable
 load_dotenv()
 
 # logging.basicConfig(leve=logging.INFO)
@@ -23,6 +26,8 @@ LIVE_CHAT = os.getenv('LIVE_CHAT')
 WELCOME_MSG = os.getenv('WELCOME_MESSAGE')
 EHEALTH_URL = os.getenv('EHEALTH_URL')
 HOSPITAL = os.getenv('HOSPITAL')
+API_KEY = os.getenv("API_KEY")
+
 bot = telebot.TeleBot(API)
 
 user_states = {}
@@ -243,7 +248,7 @@ def callback_query(call):
 
 # function to disconnect user
 def disconnect_user(chat_id):
-    url = f'{URL}/api/disconnectTelegram'
+    url = f'{URL}/v1/api/disconnectTelegram'
     data = {
         "jsonrpc": "2.0",
         "params": {
@@ -251,7 +256,8 @@ def disconnect_user(chat_id):
         }
     }
     headers = {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': f'Bearer {API_KEY}'
     }
 
     try:
@@ -273,34 +279,9 @@ def disconnect_user(chat_id):
     except requests.RequestException as e:
         bot.send_message(chat_id=chat_id, text=f"Request failed: {e}")
 
-# function to check user connect or not 
-def check_user_connect(chat_id):
-    url = f'{URL}/api/checkUser'
-    data = {
-        "jsonrpc": "2.0",
-        "params": {
-            'chat_id': chat_id
-        }
-    }
-    headers = {
-        'Content-Type': 'application/json'
-    }
-
-    try:
-        response = requests.post(url, headers=headers, json=data)
-        if response.status_code == 200:
-            result = response.json().get('result')
-            return result
-        else:
-            return f"Failed to get data from Odoo. Status code: {response.status_code}"
-    except requests.RequestException as e:
-        return f"Request failed: {e}"
-
-
-
 # function to get data from api
 def get_data_from_api(chat_id,msg_id,model):
-    url = f'{URL}/api/getContent'
+    url = f'{URL}/v1/api/getContent'
     data = {
         "jsonrpc": "2.0",
         "params": {
@@ -308,7 +289,8 @@ def get_data_from_api(chat_id,msg_id,model):
         }
     }
     headers = {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': f'Bearer {API_KEY}'
     }
     try:
         response = requests.post(url, headers=headers, json=data)
@@ -323,54 +305,7 @@ def get_data_from_api(chat_id,msg_id,model):
             return f"Failed to get data from Odoo. Status code: {response.status_code}"
     except requests.RequestException as e:
         return f"Request failed: {e}"
-def get_patient_username(chat_id):
-    url = f'{URL}/api/getPatient'
-    data = {
-        "jsonrpc": "2.0",
-        "params": {
-            'chat_id': chat_id
-        }
-    }
-    headers = {
-        'Content-Type': 'application/json'
-    }
 
-    try:
-        response = requests.post(url, headers=headers, json=data)
-        if response.status_code == 200:
-            result = response.json().get('result')
-        
-            return result
-        else:
-            return f"Failed to get data from Odoo. Status code: {response.status_code}"
-    except requests.RequestException as e:
-        return f"Request failed: {e}"
-
-def get_doctor_timetable():
-    url = f'{URL}/api/doctor_timetable'
-    # get current month 
-    now = datetime.datetime.now()
-    current_month = now.strftime("%B")
-    print(current_month)
-    data = {
-        "jsonrpc": "2.0",
-        "params": {
-            'month': current_month
-        }
-    }
-    headers = {
-        'Content-Type': 'application/json'
-    }
-
-    try:
-        response = requests.post(url, headers=headers, json=data)
-        if response.status_code == 200:
-            result = response.json().get('result')
-            return result
-        else:
-            return f"Failed to get data from Odoo. Status code: {response.status_code}"
-    except requests.RequestException as e:
-        return f"Request failed : {e}"
 
 
 
