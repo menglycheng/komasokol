@@ -295,7 +295,7 @@ def get_data_from_api(chat_id,msg_id,model):
     try:
         response = requests.post(url, headers=headers, json=data)
         if response.status_code == 200:
-            result = response.json().get('result')
+            result = response.json()
             # split result with '\n' to make new line
             msg = result.replace('"','').replace('\\n','\n')
 
