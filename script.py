@@ -191,6 +191,7 @@ def callback_query(call):
         elif call.data == 'qrcode':
             try:
                 msg = bot.edit_message_text(chat_id=chat_id, message_id=msg_id, text="កំពុងដំណើរការ សូមរង់ចាំ...")
+            
                 handle_qrcode(chat_id, msg_id)
             except Exception as e:
                 error_msg(e,chat_id,call)
