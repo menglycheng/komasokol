@@ -77,12 +77,11 @@ def create_main_keyboard(chat_id):
 
     isPremiun = checkPremium()
     if isPremiun == True:
-        if check_user_connect(chat_id) == 'false':
+        if check_user_connect(chat_id) == False:
             keyboard.row(connect_button)
         else:
             keyboard.row(disconnect_button,other_connect_button)
             keyboard.row(qrcode)
-
     return keyboard
 def create_patient_qrcode(chat_id):
     keyboard = InlineKeyboardMarkup()
