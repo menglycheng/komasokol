@@ -16,7 +16,7 @@ def check_user_connect(chat_id):
     try:
         response = requests.get(url, headers=headers)
         if response.status_code == 200:
-            result = response.json().get('result')
+            result = response.json()
             return result
         else:
             return f"Failed to get data from Odoo. Status code: {response.status_code}"
