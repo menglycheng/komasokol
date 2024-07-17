@@ -236,7 +236,7 @@ def callback_query(call):
                 error_msg(e,chat_id,call)
         else:
             usernames = get_patient_username(chat_id)
-            usernames_list = json.loads(usernames)
+            usernames_list = usernames
             handle_usernames_list(call.data, chat_id, usernames_list)
     except Exception as e:
         error_msg(e,chat_id,call)
