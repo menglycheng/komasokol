@@ -190,9 +190,14 @@ def callback_query(call):
                 error_msg(e,chat_id,call)
         elif call.data == 'qrcode':
             try:
+                isPremiun = checkPremium()
                 msg = bot.edit_message_text(chat_id=chat_id, message_id=msg_id, text="កំពុងដំណើរការ សូមរង់ចាំ...")
-            
-                handle_qrcode(chat_id, msg_id)
+                if isPremiun == True:
+                    handle_qrcode(chat_id, msg_id)
+                elif isPremiun == False:
+                    bot.send_message(chat_id=chat_id, text="អ្នកមិនអាចប្រើប្រាស់មុខងារនេះមិនអាចប្រើប្រាស់បានទេ", reply_markup=create_back_keyboard())
+                else:
+                    bot.send_message(chat_id=chat_id, text="ប្រព័ន្ធរបស់យើងប្រហែលជាមានបញ្ហាខ្លះ សូមព្យាយាមម្តងទៀត.", reply_markup=create_restart_keyboard())
             except Exception as e:
                 error_msg(e,chat_id,call)
         elif call.data == 'disconnect':
