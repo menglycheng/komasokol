@@ -254,20 +254,14 @@ def callback_query(call):
 
 # function to disconnect user
 def disconnect_user(chat_id):
-    url = f'{URL}/v1/api/disconnectTelegram'
-    data = {
-        "jsonrpc": "2.0",
-        "params": {
-            'chat_id': chat_id
-        }
-    }
+    url = f'{URL}/v1/api/disconnectTelegram?chat_id={chat_id}'
     headers = {
         'Content-Type': 'application/json',
         'Authorization': f'Bearer {API_KEY}'
     }
 
     try:
-        response = requests.post(url, headers=headers, json=data)
+        response = requests.get(url, headers=headers)
         if response.status_code == 200:
             result = response.json().get('result')
             print(result)
