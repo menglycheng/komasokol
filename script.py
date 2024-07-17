@@ -214,7 +214,7 @@ def callback_query(call):
                 morning_timetable = "\nវេនពេលព្រឹក៖ \n"
                 afternoon_timetable = "\nវេនពេលរសៀល៖ \n"
                 night_timetable = "\nវេនពេលយប់៖ \n"
-                doctor_timetable = json.loads(get_doctor_timetable())
+                doctor_timetable = get_doctor_timetable()
                 for doctor in doctor_timetable['morning_shift']:
                     morning_timetable += f"🧑🏻‍⚕️ Dr. {doctor} \n"
                 for doctor in doctor_timetable['afternoon_shift']:
