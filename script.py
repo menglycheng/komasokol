@@ -87,7 +87,7 @@ def create_main_keyboard(chat_id):
 def create_patient_qrcode(chat_id):
     keyboard = InlineKeyboardMarkup()
     usernames = get_patient_username(chat_id)
-    usernames_list = json.loads(usernames)
+    usernames_list = usernames
     for username in usernames_list:
         qrcode = InlineKeyboardButton(f'🙍 {username}', callback_data=f'{username}') 
         keyboard.add(qrcode)
