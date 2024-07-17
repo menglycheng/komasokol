@@ -247,21 +247,22 @@ def callback_query(call):
         error_msg(e,chat_id,call)
     finally:
         free_user(chat_id)
- 
-
-# function to get doctor timetable
 
 
-# function to disconnect user
 def disconnect_user(chat_id):
-    url = f'{URL}/v1/api/disconnectTelegram?chat_id={chat_id}'
+    url = f'{URL}/api/disconnectTelegram'
+    data = {
+        "jsonrpc": "2.0",
+        "params": {
+            'chat_id': chat_id
+        }
+    }
     headers = {
-        'Content-Type': 'application/json',
-        'Authorization': f'Bearer {API_KEY}'
+        'Content-Type': 'application/json'
     }
 
     try:
-        response = requests.get(url, headers=headers)
+        response = requests.post(url, headers=headers, json=data)
         if response.status_code == 200:
             result = response.json().get('result')
             print(result)
