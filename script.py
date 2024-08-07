@@ -52,15 +52,6 @@ def create_main_keyboard(chat_id):
 
     return keyboard
 
-
-
-@bot.message_handler(commands=['start'])
-def welcome_msg(message):
-    try:
-        bot.send_message(message.chat.id,WELCOME_MSG, reply_markup=create_main_keyboard(message.chat.id))
-    except Exception as e:
-        print(repr(e))
-        bot.send_message(message.chat.id, WELCOME_MSG, reply_markup=create_main_keyboard(message.chat.id))
 # warning user if they send message to bot
 @bot.message_handler(func=lambda message: True)
 def warning_msg(message):
