@@ -46,7 +46,7 @@ def create_main_keyboard(chat_id):
     keyboard = InlineKeyboardMarkup()
    
     live_chat_button = InlineKeyboardButton('💬 Live Chat',url=LIVE_CHAT)
-    mini_app_button = InlineKeyboardButton(f'📱 {HOSPITAL}',url=MINI_APP)
+    mini_app_button = InlineKeyboardButton(f'📱 {HOSPITAL}',web_app=MINI_APP)
     keyboard.add(live_chat_button)
     keyboard.add(mini_app_button)
 
