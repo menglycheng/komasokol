@@ -1,7 +1,7 @@
 import os
 import telebot
 from telebot import types
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton,WebAppInfo
 from dotenv import load_dotenv
 import requests
 import logging
@@ -46,7 +46,8 @@ def create_main_keyboard(chat_id):
     keyboard = InlineKeyboardMarkup()
    
     live_chat_button = InlineKeyboardButton('💬 Live Chat',url=LIVE_CHAT)
-    mini_app_button = InlineKeyboardButton(f'📱 {HOSPITAL}',web_app=MINI_APP)
+    # Creating the Mini App Button
+    mini_app_button = InlineKeyboardButton(text=f'📱 {HOSPITAL}',web_app=WebAppInfo(url=MINI_APP)) 
     keyboard.add(live_chat_button)
     keyboard.add(mini_app_button)
 
