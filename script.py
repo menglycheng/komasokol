@@ -1,9 +1,9 @@
 import os
-from dotenv import load_dotenv
-from telegram import Bot, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 import logging
 import time
+from dotenv import load_dotenv
+from telegram import Bot, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 
 # Load environment variables
 load_dotenv()
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 # Environment variables
 API = os.getenv('BOT_TOKEN')
 LIVE_CHAT = os.getenv('LIVE_CHAT')
-MINI_APP = os.getenv('MINI_APP')
+MINI_APP = os.getenv('MINI_APP') # This is only for demo as WebAppInfo is not supported in v2.4
 HOSPITAL = os.getenv('HOSPITAL')
 WELCOME_MSG = os.getenv('WELCOME_MESSAGE')
 
@@ -23,32 +23,34 @@ WELCOME_MSG = os.getenv('WELCOME_MESSAGE')
 bot = Bot(token=API)
 
 def create_main_keyboard():
-    # Creating InlineKeyboardMarkup
+    # Create InlineKeyboardMarkup using a list of lists for buttons
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton('💬 Live Chat', url=LIVE_CHAT)],
-        [InlineKeyboardButton(f'📱 {HOSPITAL}', web_app=WebAppInfo(url=MINI_APP))]
+        [InlineKeyboardButton(text='💬 Live Chat', url=LIVE_CHAT)],
+        [InlineKeyboardButton(text=f'📱 {HOSPITAL}', url=MINI_APP)]  # Replace WebAppInfo with URL
     ])
     return keyboard
 
-def start(update, context):
+def start(bot, update):
     # Send welcome message
-    update.message.reply_text(
-        WELCOME_MSG,
+    bot.send_message(
+        chat_id=update.message.chat_id,
+        text=WELCOME_MSG,
         reply_markup=create_main_keyboard()
     )
 
-def warning_msg(update, context):
+def warning_msg(bot, update):
     # Handle non-command text messages
     message = update.message.text
     if message and message not in ['/start', '/group']:
-        update.message.reply_text(
-            "សូមអភ័យទោស! យើងមិនអាចទទួលបានសារពីអ្នកទេ។ សូមចុចលើប៊ូតុងខាងក្រោមដើម្បីទទួលបានសារពីយើង។",
+        bot.send_message(
+            chat_id=update.message.chat_id,
+            text="សូមអភ័យទោស! យើងមិនអាចទទួលបានសារពីអ្នកទេ។ សូមចុចលើប៊ូតុងខាងក្រោមដើម្បីទទួលបានសារពីយើង។",
             reply_markup=create_main_keyboard()
         )
 
 def main():
     # Create the Updater and pass it your bot's token
-    updater = Updater(API)
+    updater = Updater(token=API)
 
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
