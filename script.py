@@ -1,13 +1,8 @@
 import os
-import telebot
-from telebot import types
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton,WebAppInfo
 from dotenv import load_dotenv
-import requests
-import logging
-import time
-import datetime
-import json 
+import telegram
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup,WebAppInfo
+
 load_dotenv()
 
 # logging.basicConfig(leve=logging.INFO)
@@ -19,7 +14,7 @@ LIVE_CHAT = os.getenv('LIVE_CHAT')
 MINI_APP = os.getenv('MINI_APP')
 HOSPITAL = os.getenv('HOSPITAL')
 WELCOME_MSG = os.getenv('WELCOME_MESSAGE')
-bot = telebot.TeleBot(API)
+bot = telegram.Bot(token=API)
 
 user_states = {}
 

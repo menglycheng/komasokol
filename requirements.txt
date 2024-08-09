@@ -9,9 +9,8 @@ httpx==0.25.2
 idna==3.6
 markdownify==0.11.6
 pypng==0.20220715.0
-pyTelegramBotAPI==4.14.1
+python-telegram-bot==2.4
 python-dotenv==1.0.0
-python-telegram-bot==20.7
 qrcode==7.4.2
 requests==2.31.0
 six==1.16.0
