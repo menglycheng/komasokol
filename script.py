@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, WebAppInfo
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
+from telegram import Bot, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 import logging
 import time
 
@@ -20,24 +20,24 @@ HOSPITAL = os.getenv('HOSPITAL')
 WELCOME_MSG = os.getenv('WELCOME_MESSAGE')
 
 # Initialize bot
-bot = telegram.Bot(token=API)
+bot = Bot(token=API)
 
 def create_main_keyboard():
     # Creating InlineKeyboardMarkup
-    keyboard = InlineKeyboardMarkup([
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton('💬 Live Chat', url=LIVE_CHAT)],
         [InlineKeyboardButton(f'📱 {HOSPITAL}', web_app=WebAppInfo(url=MINI_APP))]
     ])
     return keyboard
 
-def start(update: Update, context: CallbackContext) -> None:
+def start(update, context):
     # Send welcome message
     update.message.reply_text(
         WELCOME_MSG,
         reply_markup=create_main_keyboard()
     )
 
-def warning_msg(update: Update, context: CallbackContext) -> None:
+def warning_msg(update, context):
     # Handle non-command text messages
     message = update.message.text
     if message and message not in ['/start', '/group']:
@@ -46,9 +46,9 @@ def warning_msg(update: Update, context: CallbackContext) -> None:
             reply_markup=create_main_keyboard()
         )
 
-def main() -> None:
+def main():
     # Create the Updater and pass it your bot's token
-    updater = Updater(API, use_context=True)
+    updater = Updater(API)
 
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
@@ -57,7 +57,7 @@ def main() -> None:
     dp.add_handler(CommandHandler('start', start))
 
     # Non-command message handler
-    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, warning_msg))
+    dp.add_handler(MessageHandler(Filters.text, warning_msg))
 
     # Start the Bot
     updater.start_polling()
